@@ -2,7 +2,7 @@ package com.umair.banking.account.enums;
 
 public enum AccountStatus {
 
-    OPEN,
+    ACTIVE,
     CLOSED,
     FROZEN
 }

@@ -2,6 +2,21 @@ spring:
   application:
     name: banking-system
 
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/banking_db
+    username: postgres
+    password: 6102075Bb.
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
 currency:
   exchange:
     base-url: https://api.frankfurter.dev
