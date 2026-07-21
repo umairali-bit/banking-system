@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: banking-system
+
+currency:
+  exchange:
+    base-url: https://api.frankfurter.dev
