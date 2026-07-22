@@ -12,8 +12,8 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "saving_accounts")
-public class SavingsAccount extends Account {
+@Table(name = "checking_accounts")
+public class CheckingAccount extends Account {
 
-    private BigDecimal interestRate;
+    private BigDecimal overdraftLimit;
 }

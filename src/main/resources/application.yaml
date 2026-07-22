@@ -2,15 +2,13 @@ spring:
   application:
     name: banking-system
 
-
   datasource:
-    url: jdbc:postgresql://localhost:5432/banking_db
-    username: postgres
-    password: 6102075Bb.
-
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:

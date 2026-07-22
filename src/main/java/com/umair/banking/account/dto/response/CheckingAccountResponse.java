@@ -7,7 +7,7 @@ import com.umair.banking.account.enums.Currency;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public record SavingsAccountResponse(
+public record CheckingAccountResponse(
 
         Long id,
         String accountNumber,
@@ -16,8 +16,14 @@ public record SavingsAccountResponse(
         AccountType accountType,
         BigDecimal balance,
         Currency currency,
-        BigDecimal interestRate,
+        BigDecimal overdraftLimit,
         AccountStatus status,
         LocalDateTime createdAt
+
+
+
+
+
+
 ) {
 }
