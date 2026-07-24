@@ -1,4 +1,4 @@
-package com.umair.banking.account.generator;
+package com.umair.banking.generator;
 
 import org.springframework.stereotype.Component;
 
