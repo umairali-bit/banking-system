@@ -1,4 +1,4 @@
-package com.umair.banking.validation.constants;
+package com.umair.banking.constants;
 
 import java.math.BigDecimal;
 

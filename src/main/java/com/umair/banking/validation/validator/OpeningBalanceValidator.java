@@ -3,7 +3,7 @@ package com.umair.banking.validation.validator;
 import com.umair.banking.account.dto.request.CreateSavingsAccountRequest;
 import com.umair.banking.validation.annotation.ValidOpeningBalance;
 import com.umair.banking.currency.service.CurrencyConversionService;
-import com.umair.banking.validation.constants.ValidationConstant;
+import com.umair.banking.constants.ValidationConstant;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;

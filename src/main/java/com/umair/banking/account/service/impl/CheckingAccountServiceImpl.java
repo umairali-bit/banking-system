@@ -53,6 +53,7 @@ public class CheckingAccountServiceImpl implements CheckingAccountService {
         return toResponse(checkingAccount);
     }
 
+
     private BigDecimal getDefaultOverdraftLimit(Currency currency) {
         return switch (currency) {
             case USD -> BigDecimal.valueOf(1000);
