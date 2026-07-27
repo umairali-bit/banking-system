@@ -6,8 +6,11 @@ import com.umair.banking.account.entity.CheckingAccount;
 import com.umair.banking.account.enums.AccountStatus;
 import com.umair.banking.account.enums.AccountType;
 import com.umair.banking.account.enums.Currency;
+import com.umair.banking.common.service.AccountNumberService;
 import com.umair.banking.customer.entity.Customer;
 import com.umair.banking.customer.repository.CustomerRepository;
+import com.umair.banking.exception.AccountNotFoundException;
+import com.umair.banking.exception.CustomerNotFoundException;
 import com.umair.banking.generator.AccountNumberGenerator;
 import com.umair.banking.account.repository.AccountRepository;
 import com.umair.banking.account.service.CheckingAccountService;
@@ -23,7 +26,7 @@ import java.util.List;
 public class CheckingAccountServiceImpl implements CheckingAccountService {
 
     private final AccountRepository accountRepository;
-    private final AccountNumberGenerator accountNumberGenerator;
+    private final AccountNumberService accountNumberService;
     private final CustomerRepository customerRepository;
 
 
@@ -33,13 +36,13 @@ public class CheckingAccountServiceImpl implements CheckingAccountService {
 
         Customer customer = customerRepository.findById(request.customerId())
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new CustomerNotFoundException(
                                 "Customer not found with id " + request.customerId()));
 
         CheckingAccount checkingAccount = new CheckingAccount();
 
         checkingAccount.setCustomer(customer);
-        checkingAccount.setAccountNumber(accountNumberGenerator.generateAccountNumber());
+        checkingAccount.setAccountNumber(accountNumberService.generateUniqueAccountNumber());
         checkingAccount.setAccountType(AccountType.CHECKING);
         checkingAccount.setBalance(request.openingBalance());
         checkingAccount.setCurrency(request.currency());
@@ -69,7 +72,7 @@ public class CheckingAccountServiceImpl implements CheckingAccountService {
                 .filter(account -> account instanceof CheckingAccount)
                 .map(account -> (CheckingAccount) account)
                 .orElseThrow(() ->
-                        new RuntimeException("Checking account not found with id " + id));
+                        new AccountNotFoundException("Checking account not found with id " + id));
 
         return toResponse(checkingAccount);
     }

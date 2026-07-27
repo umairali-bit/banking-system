@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/saving-accounts")
 @RequiredArgsConstructor
@@ -24,5 +26,19 @@ public class SavingsAccountController {
        return ResponseEntity
                .status(HttpStatus.CREATED)
                .body(savingsAccountResponse);
+    }
+
+    @GetMapping("/{accountId}")
+    public ResponseEntity<SavingsAccountResponse> getSavingsAccount(@PathVariable Long accountId) {
+
+        return ResponseEntity.ok(
+                savingAccountService.getById(accountId)
+        );
+
+    }
+
+    @GetMapping
+    public ResponseEntity<List<SavingsAccountResponse>> getSavingsAccounts() {
+        return ResponseEntity.ok(savingAccountService.getAll());
     }
 }

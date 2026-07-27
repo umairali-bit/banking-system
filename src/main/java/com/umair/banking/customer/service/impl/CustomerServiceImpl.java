@@ -7,6 +7,9 @@ import com.umair.banking.customer.dto.response.CustomerResponse;
 import com.umair.banking.customer.entity.Customer;
 import com.umair.banking.customer.repository.CustomerRepository;
 import com.umair.banking.customer.service.CustomerService;
+import com.umair.banking.exception.CustomerNotFoundException;
+import com.umair.banking.exception.DuplicateEmailException;
+import com.umair.banking.exception.DuplicatePhoneNumberException;
 import com.umair.banking.generator.CustomerNumberGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -53,7 +56,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         return customerRepository
                 .findById(id).
-                orElseThrow(() -> new RuntimeException("Customer with id " + id + " not found"));
+                orElseThrow(() -> new CustomerNotFoundException("Customer with id " + id + " not found"));
         }
 
 
@@ -63,11 +66,11 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerResponse createCustomer(CustomerRequest request) {
 
         if (customerRepository.existsByEmail(request.email())) {
-        throw new RuntimeException("Email already exists.");
+        throw new DuplicateEmailException("Customer with email '" + request.email() + "' already exists.");
     }
 
         if (customerRepository.existsByPhoneNumber(request.phoneNumber())) {
-            throw new RuntimeException("Phone number already exists.");
+            throw new DuplicatePhoneNumberException("Customer with phone number '" + request.phoneNumber() + "' already exists.");
         }
 
         Customer customer = toEntity(request);

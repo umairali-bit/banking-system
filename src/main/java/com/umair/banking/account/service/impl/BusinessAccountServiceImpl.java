@@ -7,8 +7,12 @@ import com.umair.banking.account.enums.AccountStatus;
 import com.umair.banking.account.enums.AccountType;
 import com.umair.banking.account.repository.AccountRepository;
 import com.umair.banking.account.service.BusinessAccountService;
+import com.umair.banking.common.service.AccountNumberService;
 import com.umair.banking.customer.entity.Customer;
 import com.umair.banking.customer.repository.CustomerRepository;
+import com.umair.banking.exception.AccountNotFoundException;
+import com.umair.banking.exception.BusinessAccountNotFoundException;
+import com.umair.banking.exception.CustomerNotFoundException;
 import com.umair.banking.generator.AccountNumberGenerator;
 import com.umair.banking.generator.BusinessNumberGenerator;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +28,7 @@ public class BusinessAccountServiceImpl implements BusinessAccountService {
 
     private final AccountRepository accountRepository;
     public final BusinessNumberGenerator businessNumberGenerator;
-    public final AccountNumberGenerator accountNumberGenerator;
+    public final AccountNumberService accountNumberService;
     public final CustomerRepository customerRepository;
 
 
@@ -32,12 +36,12 @@ public class BusinessAccountServiceImpl implements BusinessAccountService {
     public BusinessAccountResponse createBusinessAccount(CreateBusinessAccountRequest request) {
 
         Customer customer = customerRepository.findById(request.customerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + request.customerId()));
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found with id: " + request.customerId()));
 
         BusinessAccount businessAccount = new BusinessAccount();
 
         businessAccount.setCustomer(customer);
-        businessAccount.setAccountNumber(accountNumberGenerator.generateAccountNumber());
+        businessAccount.setAccountNumber(accountNumberService.generateUniqueAccountNumber());
         businessAccount.setRegistrationNumber(businessNumberGenerator.generateBusinessNumber());
         businessAccount.setBusinessName(request.businessName());
         businessAccount.setBalance(request.openingBalance());
@@ -59,7 +63,7 @@ public class BusinessAccountServiceImpl implements BusinessAccountService {
         BusinessAccount businessAccount = accountRepository.findById(id)
                 .filter(account -> account instanceof BusinessAccount)
                 .map(account -> (BusinessAccount) account )
-                .orElseThrow(() -> new RuntimeException("BusinessAccount not found with id: " + id));
+                .orElseThrow(() -> new AccountNotFoundException("BusinessAccount not found with id: " + id));
 
         return toResponse(businessAccount);
     }

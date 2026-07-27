@@ -3,8 +3,11 @@ package com.umair.banking.account.service.impl;
 import com.umair.banking.account.entity.SavingsAccount;
 import com.umair.banking.account.enums.AccountStatus;
 import com.umair.banking.account.enums.AccountType;
+import com.umair.banking.common.service.AccountNumberService;
 import com.umair.banking.customer.entity.Customer;
 import com.umair.banking.customer.repository.CustomerRepository;
+import com.umair.banking.exception.AccountNotFoundException;
+import com.umair.banking.exception.CustomerNotFoundException;
 import com.umair.banking.generator.AccountNumberGenerator;
 import com.umair.banking.account.repository.AccountRepository;
 import com.umair.banking.account.service.SavingsAccountService;
@@ -25,7 +28,7 @@ import java.util.List;
 public class SavingsAccountServiceImpl implements SavingsAccountService {
 
     private final AccountRepository accountRepository;
-    private final AccountNumberGenerator accountNumberGenerator;
+    private final AccountNumberService accountNumberService;
     private final CustomerRepository customerRepository;
 
     private static final BigDecimal DEFAULT_INTEREST_RATE = BigDecimal.valueOf(2.50);
@@ -35,13 +38,13 @@ public class SavingsAccountServiceImpl implements SavingsAccountService {
 
         Customer customer = customerRepository.findById(request.customerId())
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new CustomerNotFoundException(
                                 "Customer not found with id " + request.customerId()));
 
         SavingsAccount savingsAccount = new SavingsAccount();
 
         savingsAccount.setCustomer(customer);
-        savingsAccount.setAccountNumber(accountNumberGenerator.generateAccountNumber());
+        savingsAccount.setAccountNumber(accountNumberService.generateUniqueAccountNumber());
         savingsAccount.setAccountType(AccountType.SAVINGS);
         savingsAccount.setBalance(request.openingBalance());
         savingsAccount.setCurrency(request.currency());
@@ -61,7 +64,7 @@ public class SavingsAccountServiceImpl implements SavingsAccountService {
     public SavingsAccountResponse getById(Long id) {
 
         SavingsAccount savingsAccount = (SavingsAccount) accountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + id));
+                .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + id));
 
         return toResponse(savingsAccount);
     }
@@ -98,5 +101,6 @@ public class SavingsAccountServiceImpl implements SavingsAccountService {
         );
 
     }
+
 }
 
