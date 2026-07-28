@@ -8,7 +8,6 @@ import com.umair.banking.customer.entity.Customer;
 import com.umair.banking.customer.repository.CustomerRepository;
 import com.umair.banking.exception.AccountNotFoundException;
 import com.umair.banking.exception.CustomerNotFoundException;
-import com.umair.banking.generator.AccountNumberGenerator;
 import com.umair.banking.account.repository.AccountRepository;
 import com.umair.banking.account.service.SavingsAccountService;
 import lombok.RequiredArgsConstructor;

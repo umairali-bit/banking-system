@@ -28,16 +28,6 @@ public class GlobalExceptionHandler {
 
     }
 
-    @ExceptionHandler(DuplicateAccountException.class)
-    public ResponseEntity<ApiErrorResponse> handleDuplicateAccountException(DuplicateAccountException ex,
-                                                                            HttpServletRequest request) {
-
-        return buildResponse(
-                HttpStatus.CONFLICT,
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-    }
 
     @ExceptionHandler(AccountNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleAccountNotFoundException(AccountNotFoundException ex,
@@ -49,15 +39,19 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(BusinessAccountNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handleDuplicateAccountException(BusinessAccountNotFoundException ex,
-                                                                            HttpServletRequest request) {
+    @ExceptionHandler(InvalidAccountStateException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidAccountStateException(InvalidAccountStateException ex,
+                                                                               HttpServletRequest request) {
+
         return buildResponse(
-                HttpStatus.CONFLICT,
+                HttpStatus.BAD_REQUEST,
                 ex.getMessage(),
                 request.getRequestURI()
         );
+
     }
+
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex,
@@ -75,6 +69,7 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
     }
+
 
     @ExceptionHandler(DuplicateEmailException.class)
     public ResponseEntity<ApiErrorResponse> handleDuplicateEmail(
