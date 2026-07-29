@@ -7,11 +7,11 @@ import com.umair.banking.account.enums.AccountStatus;
 import com.umair.banking.account.enums.AccountType;
 import com.umair.banking.account.repository.AccountRepository;
 import com.umair.banking.account.service.BusinessAccountService;
-import com.umair.banking.common.service.AccountNumberService;
 import com.umair.banking.customer.entity.Customer;
 import com.umair.banking.customer.repository.CustomerRepository;
 import com.umair.banking.exception.AccountNotFoundException;
 import com.umair.banking.exception.CustomerNotFoundException;
+import com.umair.banking.generator.AccountNumberGenerator;
 import com.umair.banking.generator.BusinessNumberGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ public class BusinessAccountServiceImpl implements BusinessAccountService {
 
     private final AccountRepository accountRepository;
     public final BusinessNumberGenerator businessNumberGenerator;
-    public final AccountNumberService accountNumberService;
+    public final AccountNumberGenerator accountNumberGenerator;
     public final CustomerRepository customerRepository;
 
 
@@ -39,8 +39,8 @@ public class BusinessAccountServiceImpl implements BusinessAccountService {
         BusinessAccount businessAccount = new BusinessAccount();
 
         businessAccount.setCustomer(customer);
-        businessAccount.setAccountNumber(accountNumberService.generateUniqueAccountNumber());
-        businessAccount.setRegistrationNumber(businessNumberGenerator.generateBusinessNumber());
+        businessAccount.setAccountNumber(accountNumberGenerator.generateUniqueAccountNumber());
+        businessAccount.setRegistrationNumber(businessNumberGenerator.generateUniqueBusinessNumber());
         businessAccount.setBusinessName(request.businessName());
         businessAccount.setBalance(request.openingBalance());
         businessAccount.setCurrency(request.currency());

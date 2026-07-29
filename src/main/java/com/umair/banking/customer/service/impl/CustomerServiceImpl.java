@@ -59,23 +59,31 @@ public class CustomerServiceImpl implements CustomerService {
                 orElseThrow(() -> new CustomerNotFoundException("Customer with id " + id + " not found"));
         }
 
+    private void validateEmail(String email) {
+        if (customerRepository.existsByEmail(email)) {
+            throw new DuplicateEmailException("Customer with email " + email + " already exists");
+        }
+    }
+
+    private void validatePhoneNumber(String phoneNumber) {
+        if (customerRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new DuplicatePhoneNumberException("Customer with phone number " + phoneNumber + " already exists");
+        }
+    }
+
 
 
 
     @Override
     public CustomerResponse createCustomer(CustomerRequest request) {
 
-        if (customerRepository.existsByEmail(request.email())) {
-        throw new DuplicateEmailException("Customer with email '" + request.email() + "' already exists.");
-    }
+        validateEmail(request.email());
 
-        if (customerRepository.existsByPhoneNumber(request.phoneNumber())) {
-            throw new DuplicatePhoneNumberException("Customer with phone number '" + request.phoneNumber() + "' already exists.");
-        }
+        validatePhoneNumber(request.phoneNumber());
 
         Customer customer = toEntity(request);
 
-        customer.setCustomerNumber(customerNumberGenerator.generateCustomerNumber());
+        customer.setCustomerNumber(customerNumberGenerator.generateUniqueCustomerNumber());
 
         customer = customerRepository.save(customer);
 

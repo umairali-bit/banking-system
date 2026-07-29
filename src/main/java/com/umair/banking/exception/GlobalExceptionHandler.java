@@ -58,9 +58,9 @@ public class GlobalExceptionHandler {
                                                                                   HttpServletRequest request) {
 
         String message = ex.getBindingResult()
-                .getFieldErrors()
+                .getAllErrors()
                 .stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .map(error -> error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
 
         return buildResponse(

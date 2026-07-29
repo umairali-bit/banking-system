@@ -6,13 +6,13 @@ import com.umair.banking.account.entity.CheckingAccount;
 import com.umair.banking.account.enums.AccountStatus;
 import com.umair.banking.account.enums.AccountType;
 import com.umair.banking.account.enums.Currency;
-import com.umair.banking.common.service.AccountNumberService;
 import com.umair.banking.customer.entity.Customer;
 import com.umair.banking.customer.repository.CustomerRepository;
 import com.umair.banking.exception.AccountNotFoundException;
 import com.umair.banking.exception.CustomerNotFoundException;
 import com.umair.banking.account.repository.AccountRepository;
 import com.umair.banking.account.service.CheckingAccountService;
+import com.umair.banking.generator.AccountNumberGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +24,7 @@ import java.util.List;
 public class CheckingAccountServiceImpl implements CheckingAccountService {
 
     private final AccountRepository accountRepository;
-    private final AccountNumberService accountNumberService;
+    private final AccountNumberGenerator accountNumbergenerator;
     private final CustomerRepository customerRepository;
 
 
@@ -40,7 +40,7 @@ public class CheckingAccountServiceImpl implements CheckingAccountService {
         CheckingAccount checkingAccount = new CheckingAccount();
 
         checkingAccount.setCustomer(customer);
-        checkingAccount.setAccountNumber(accountNumberService.generateUniqueAccountNumber());
+        checkingAccount.setAccountNumber(accountNumbergenerator.generateUniqueAccountNumber());
         checkingAccount.setAccountType(AccountType.CHECKING);
         checkingAccount.setBalance(request.openingBalance());
         checkingAccount.setCurrency(request.currency());
