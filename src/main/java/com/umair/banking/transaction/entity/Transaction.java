@@ -6,12 +6,16 @@ import com.umair.banking.account.enums.Currency;
 import com.umair.banking.transaction.enums.TransactionStatus;
 import com.umair.banking.transaction.enums.TransactionType;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "transactions")
+@Getter
+@Setter
 public class Transaction {
 
     @Id

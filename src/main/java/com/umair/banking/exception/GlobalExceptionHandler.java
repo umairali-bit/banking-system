@@ -120,4 +120,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(apiErrorResponse);
 
     }
+
+    @ExceptionHandler(InsufficientFundsExceptions.class)
+    public ResponseEntity<ApiErrorResponse> handleInsufficientFundsException(InsufficientFundsExceptions ex,
+                                                                             HttpServletRequest request) {
+
+        return buildResponse(
+                HttpStatus.FORBIDDEN,
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+    }
 }

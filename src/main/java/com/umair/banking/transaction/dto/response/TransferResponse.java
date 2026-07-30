@@ -13,7 +13,7 @@ public record TransferResponse(
         Long transactionId,
         String transferReference,
         Long sourceAccountId,
-        Long destinationId,
+        Long destinationAccountId,
         BigDecimal sourceAmount,
         Currency sourceCurrency,
         BigDecimal destinationAmount,
