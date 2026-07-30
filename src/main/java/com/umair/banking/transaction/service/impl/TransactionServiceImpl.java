@@ -2,11 +2,13 @@ package com.umair.banking.transaction.service.impl;
 
 import com.umair.banking.account.entity.Account;
 import com.umair.banking.account.enums.AccountStatus;
+import com.umair.banking.account.enums.Currency;
 import com.umair.banking.account.repository.AccountRepository;
 import com.umair.banking.currency.service.CurrencyConversionService;
 import com.umair.banking.exception.AccountNotFoundException;
 import com.umair.banking.exception.InsufficientFundsExceptions;
 import com.umair.banking.exception.InvalidAccountStateException;
+import com.umair.banking.exception.TransactionNotFoundException;
 import com.umair.banking.transaction.dto.request.DepositRequest;
 import com.umair.banking.transaction.dto.request.TransferRequest;
 import com.umair.banking.transaction.dto.request.WithdrawRequest;
@@ -14,6 +16,7 @@ import com.umair.banking.transaction.dto.response.DepositResponse;
 import com.umair.banking.transaction.dto.response.TransactionResponse;
 import com.umair.banking.transaction.dto.response.TransferResponse;
 import com.umair.banking.transaction.dto.response.WithdrawResponse;
+import com.umair.banking.transaction.entity.Transaction;
 import com.umair.banking.transaction.mapper.TransactionMapper;
 import com.umair.banking.transaction.repository.TransactionRepository;
 import com.umair.banking.transaction.service.TransactionService;
@@ -33,14 +36,6 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionMapper transactionMapper;
 
 
-
-    private Account findAccountById(Long accountId) {
-        return accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException(String.format("Account with id %d not found", accountId)
-        ));
-
-    }
-
     private void validateAccountStatus(Account account) {
 
         if (account.getStatus() == AccountStatus.FROZEN) {
@@ -52,7 +47,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
     }
 
-    private void insufficientFunds(Account account, BigDecimal amount) {
+    private void validateSufficientFunds(Account account, BigDecimal amount) {
 
         if (account.getBalance().compareTo(amount) < 0) {
             throw new InsufficientFundsExceptions(
@@ -61,35 +56,150 @@ public class TransactionServiceImpl implements TransactionService {
         }
     }
 
+    private Account getActiveAccount(Long accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException(
+                        String.format("Account with id %d not found", accountId)));
+        validateAccountStatus(account);
+        return account;
+    }
+
+    private void creditAccount(Account account, BigDecimal amount) {
+        account.setBalance(account.getBalance().add(amount));
+    }
+
+    private void debitAccount(Account account, BigDecimal amount) {
+        account.setBalance(account.getBalance().subtract(amount));
+    }
+
+    private Account save(Account account) {
+        return accountRepository.save(account);
+
+    }
+
+    private Transaction save(Transaction transaction) {
+        return transactionRepository.save(transaction);
+    }
+
+    private BigDecimal convertAmount(BigDecimal amount,
+                                     Currency from,
+                                     Currency to) {
+        return currencyConversionService.convert(amount, from, to);
+    }
+
+
+
 
     @Override
     public DepositResponse deposit(DepositRequest depositRequest) {
-        return null;
+
+        Account account = getActiveAccount(depositRequest.accountId());
+
+        creditAccount(account, depositRequest.amount());
+
+        save(account);
+
+        Transaction transaction = transactionMapper.toDepositTransaction(
+                account,
+                depositRequest.amount()
+
+        );
+
+        transaction = transactionRepository.save(transaction);
+
+        return transactionMapper.toDepositResponse(transaction);
     }
 
     @Override
     public WithdrawResponse withdraw(WithdrawRequest withdrawRequest) {
-        return null;
+
+        Account account = getActiveAccount(withdrawRequest.accountId());
+
+        debitAccount(account, withdrawRequest.amount());
+
+        save(account);
+
+        Transaction transaction = transactionMapper.toWithdrawTransaction(
+                account,
+                withdrawRequest.amount()
+        );
+        transaction = transactionRepository.save(transaction);
+
+        return transactionMapper.toWithdrawResponse(transaction);
     }
 
     @Override
     public TransferResponse transfer(TransferRequest transferRequest) {
-        return null;
+
+        Account sourceAccount = getActiveAccount(
+                transferRequest.sourceAccountId());
+
+        Account destinationAccount = getActiveAccount(
+                transferRequest.destinationAccountId());
+
+        validateSufficientFunds(sourceAccount, transferRequest.amount());
+
+        BigDecimal destinationAmount;
+
+        if(sourceAccount.getCurrency() == destinationAccount.getCurrency()) {
+            destinationAmount = transferRequest.amount();
+        } else {
+            destinationAmount = convertAmount(transferRequest.amount(),
+                    sourceAccount.getCurrency(),
+                    destinationAccount.getCurrency());
+
+
+        }
+
+        debitAccount(sourceAccount, transferRequest.amount());
+        creditAccount(destinationAccount, transferRequest.amount());
+
+        save(sourceAccount);
+        save(destinationAccount);
+
+        Transaction transaction = transactionMapper.toTransferTransaction(
+                sourceAccount,
+                destinationAccount,
+                transferRequest.amount(),
+                destinationAmount
+        );
+
+        transaction = transactionRepository.save(transaction);
+
+
+        return transactionMapper.toTransferResponse(transaction);
     }
 
     @Override
     public TransactionResponse getTransactionById(Long transactionId) {
-        return null;
+
+        Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(
+                () -> new TransactionNotFoundException(String.format("Transaction with id %d not found", transactionId))
+        );
+
+        return transactionMapper.toTransactionResponse(transaction);
     }
 
     @Override
     public TransactionResponse getTransactionByReference(String transactionReference) {
-        return null;
+
+        Transaction transaction = transactionRepository.findByTransactionReference(transactionReference)
+                .orElseThrow(() -> new TransactionNotFoundException(String.format("Transaction with reference %s not found", transactionReference))
+        );
+
+        return transactionMapper.toTransactionResponse(transaction);
     }
 
     @Override
     public List<TransactionResponse> getTransactionsByAccountId(Long accountId) {
-        return List.of();
+
+        getActiveAccount(accountId);
+
+        return transactionRepository.findBySourceAccountOrDestinationAccount(accountId, accountId)
+                .stream()
+                .map(i -> transactionMapper.toTransactionResponse(i))
+                .toList();
+
     }
 
     @Override

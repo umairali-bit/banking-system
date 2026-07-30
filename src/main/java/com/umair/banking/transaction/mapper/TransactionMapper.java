@@ -44,7 +44,51 @@ public class TransactionMapper {
 
     }
 
-    private DepositResponse toDepositResponse(Transaction transaction) {
+    public Transaction toDepositTransaction(Account account, BigDecimal amount) {
+        return createTransaction(
+                null,
+                account,
+                amount,
+                account.getCurrency(),
+                amount,
+                account.getCurrency(),
+                TransactionType.DEPOSIT
+        );
+
+
+    }
+
+    public Transaction toWithdrawTransaction(Account account, BigDecimal amount) {
+        return createTransaction(
+                account,
+                null,
+                amount,
+                account.getCurrency(),
+                amount,
+                account.getCurrency(),
+                TransactionType.WITHDRAW
+
+
+        );
+    }
+
+    public Transaction toTransferTransaction(Account sourceAccount,
+                                             Account destinationAccount,
+                                             BigDecimal sourceAmount,
+                                             BigDecimal destinationAmount) {
+        return createTransaction(
+                sourceAccount,
+                destinationAccount,
+                sourceAmount,
+                sourceAccount.getCurrency(),
+                destinationAmount,
+                destinationAccount.getCurrency(),
+                TransactionType.TRANSFER
+        );
+    }
+
+    public DepositResponse toDepositResponse(Transaction transaction) {
+
         return new DepositResponse(
                 transaction.getId(),
                 transaction.getTransactionReference(),
@@ -55,12 +99,11 @@ public class TransactionMapper {
                 transaction.getTransactionType(),
                 transaction.getTransactionStatus(),
                 transaction.getCreatedAt()
-
         );
-
     }
 
-    private WithdrawResponse toWithdrawResponse(Transaction transaction) {
+    public WithdrawResponse toWithdrawResponse(Transaction transaction) {
+
         return new WithdrawResponse(
                 transaction.getId(),
                 transaction.getTransactionReference(),
@@ -71,11 +114,10 @@ public class TransactionMapper {
                 transaction.getTransactionType(),
                 transaction.getTransactionStatus(),
                 transaction.getCreatedAt()
-
         );
     }
+    public TransferResponse toTransferResponse(Transaction transaction) {
 
-    private TransferResponse toTransferResponse(Transaction transaction) {
         return new TransferResponse(
                 transaction.getId(),
                 transaction.getTransactionReference(),
@@ -93,12 +135,20 @@ public class TransactionMapper {
         );
     }
 
-    private TransactionResponse toTransactionResponse(Transaction transaction) {
+    public TransactionResponse toTransactionResponse(Transaction transaction) {
+
         return new TransactionResponse(
                 transaction.getId(),
                 transaction.getTransactionReference(),
-                transaction.getSourceAccount().getId(),
-                transaction.getDestinationAccount().getId(),
+
+                transaction.getSourceAccount() != null
+                        ? transaction.getSourceAccount().getId()
+                        : null,
+
+                transaction.getDestinationAccount() != null
+                        ? transaction.getDestinationAccount().getId()
+                        : null,
+
                 transaction.getSourceAmount(),
                 transaction.getSourceCurrency(),
                 transaction.getDestinationAmount(),
@@ -108,4 +158,6 @@ public class TransactionMapper {
                 transaction.getCreatedAt()
         );
     }
+
+
 }

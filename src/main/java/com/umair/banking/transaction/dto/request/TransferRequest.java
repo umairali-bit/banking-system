@@ -8,10 +8,10 @@ import java.math.BigDecimal;
 public record TransferRequest(
 
         @NotNull(message = "Account id is required")
-        Long accountId,
+        Long sourceAccountId,
 
         @NotNull(message = "Destination account id is required")
-        Long accountDestinationId,
+        Long destinationAccountId,
 
         @NotNull(message = "Amount is required")
         @Positive(message = "Amount must be greater than zero")
