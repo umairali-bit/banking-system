@@ -12,25 +12,32 @@ import java.util.Optional;
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
     @Query("""
-        SELECT t
-        FROM Transaction t
-        WHERE t.sourceAccount.customer.customerNumber = :customerNumber
-         or t.destinationAccount.customer.customerNumber = :customerNumber
-        """)
+            SELECT t
+            FROM Transaction t
+            WHERE t.sourceAccount.customer.customerNumber = :customerNumber
+             or t.destinationAccount.customer.customerNumber = :customerNumber
+            """)
     List<Transaction> findTransactionsByCustomerNumber(String customerNumber);
 
-//    @Query("""
-//
-//SELECT DISTINT t
-//FROM Transaction t
-//WHERE t.sourceAccount.customer.c
-//""")
-
-
+    @Query("""
+            SELECT DISTINCT t
+            FROM Transaction t
+            WHERE t.sourceAccount.customer.customerNumber = :customerNumber
+             OR t.destinationAccount.customer.customerNumber = :customerNumber
+            """)
+    List<Transaction> findByCustomerNumber(String customerNumber);
 
     Optional<Transaction> findByTransactionReference(String transactionReference);
 
     boolean existsByTransactionReference(String uniqueTransactionReference);
 
-    List<Transaction> findBySourceAccountOrDestinationAccount(Long sourceAccountId, Long destinationAccountId);
+
+    @Query("""
+        SELECT t
+        FROM Transaction t
+        WHERE t.sourceAccount.id = :accountId
+           OR t.destinationAccount.id = :accountId
+        """)
+    List<Transaction> findByAccountId(Long accountId);
+
 }

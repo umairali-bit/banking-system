@@ -105,7 +105,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         );
 
-        transaction = transactionRepository.save(transaction);
+        transaction = save(transaction);
 
         return transactionMapper.toDepositResponse(transaction);
     }
@@ -115,6 +115,8 @@ public class TransactionServiceImpl implements TransactionService {
 
         Account account = getActiveAccount(withdrawRequest.accountId());
 
+        validateSufficientFunds(account, withdrawRequest.amount());
+
         debitAccount(account, withdrawRequest.amount());
 
         save(account);
@@ -123,7 +125,7 @@ public class TransactionServiceImpl implements TransactionService {
                 account,
                 withdrawRequest.amount()
         );
-        transaction = transactionRepository.save(transaction);
+        transaction = save(transaction);
 
         return transactionMapper.toWithdrawResponse(transaction);
     }
@@ -152,7 +154,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         debitAccount(sourceAccount, transferRequest.amount());
-        creditAccount(destinationAccount, transferRequest.amount());
+        creditAccount(destinationAccount, destinationAmount);
 
         save(sourceAccount);
         save(destinationAccount);
@@ -164,7 +166,7 @@ public class TransactionServiceImpl implements TransactionService {
                 destinationAmount
         );
 
-        transaction = transactionRepository.save(transaction);
+        transaction = save(transaction);
 
 
         return transactionMapper.toTransferResponse(transaction);
@@ -195,7 +197,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         getActiveAccount(accountId);
 
-        return transactionRepository.findBySourceAccountOrDestinationAccount(accountId, accountId)
+        return transactionRepository.findByAccountId(accountId)
                 .stream()
                 .map(i -> transactionMapper.toTransactionResponse(i))
                 .toList();
@@ -204,11 +206,18 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public List<TransactionResponse> getTransactionsByCustomerNumber(String customerNumber) {
-        return List.of();
+
+        return transactionRepository.findByCustomerNumber(customerNumber)
+                .stream()
+                .map(i -> transactionMapper.toTransactionResponse(i))
+                .toList();
     }
 
     @Override
     public List<TransactionResponse> getAllTransactions() {
-        return List.of();
+        return transactionRepository.findAll()
+                .stream()
+                .map(i -> transactionMapper.toTransactionResponse(i))
+                .toList();
     }
 }
