@@ -65,8 +65,8 @@ public class TransactionController {
     }
 
     @GetMapping("/customer/{customerNumber}")
-    public ResponseEntity<List<TransactionResponse>> getCustomerNumber(
-            @Valid @RequestParam("customerNumber") String customerNumber
+    public ResponseEntity<List<TransactionResponse>> getTransactionsByCustomerNumber(
+             @PathVariable String customerNumber
     ) {
         return ResponseEntity.ok(transactionService.getTransactionsByCustomerNumber(customerNumber));
 
