@@ -22,6 +22,8 @@ import com.umair.banking.transaction.repository.TransactionRepository;
 import com.umair.banking.transaction.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -64,6 +66,21 @@ public class TransactionServiceImpl implements TransactionService {
         return account;
     }
 
+    private Account getActiveAccountForUpdate(Long accountId) {
+
+        Account account = accountRepository.findByIdForUpdate(accountId)
+                .orElseThrow(() -> new AccountNotFoundException(
+                        String.format(
+                                "Account with id %d not found",
+                                accountId
+                        )
+                ));
+
+        validateAccountStatus(account);
+
+        return account;
+    }
+
     private void creditAccount(Account account, BigDecimal amount) {
         account.setBalance(account.getBalance().add(amount));
     }
@@ -91,9 +108,10 @@ public class TransactionServiceImpl implements TransactionService {
 
 
     @Override
+    @Transactional
     public DepositResponse deposit(DepositRequest depositRequest) {
 
-        Account account = getActiveAccount(depositRequest.accountId());
+        Account account = getActiveAccount(depositRequest.accountId());;
 
         creditAccount(account, depositRequest.amount());
 
@@ -111,11 +129,30 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional
     public WithdrawResponse withdraw(WithdrawRequest withdrawRequest) {
 
-        Account account = getActiveAccount(withdrawRequest.accountId());
+        Account account =
+                getActiveAccountForUpdate(withdrawRequest.accountId());
 
         validateSufficientFunds(account, withdrawRequest.amount());
+
+//        System.out.println(
+//                Thread.currentThread().getName()
+//                        + " acquired lock on account "
+//                        + account.getId()
+//        );
+//
+//        try {
+//            Thread.sleep(10_000);
+//        } catch (InterruptedException exception) {
+//            Thread.currentThread().interrupt();
+//
+//            throw new IllegalStateException(
+//                    "Withdrawal demonstration was interrupted",
+//                    exception
+//            );
+//        }
 
         debitAccount(account, withdrawRequest.amount());
 
@@ -131,6 +168,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional
     public TransferResponse transfer(TransferRequest transferRequest) {
 
         Account sourceAccount = getActiveAccount(
@@ -173,6 +211,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TransactionResponse getTransactionById(Long transactionId) {
 
         Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(
@@ -183,6 +222,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TransactionResponse getTransactionByReference(String transactionReference) {
 
         Transaction transaction = transactionRepository.findByTransactionReference(transactionReference)
@@ -193,6 +233,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TransactionResponse> getTransactionsByAccountId(Long accountId) {
 
         getActiveAccount(accountId);
@@ -205,6 +246,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TransactionResponse> getTransactionsByCustomerNumber(String customerNumber) {
 
         return transactionRepository.findByCustomerNumber(customerNumber)
@@ -214,6 +256,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TransactionResponse> getAllTransactions() {
         return transactionRepository.findAll()
                 .stream()

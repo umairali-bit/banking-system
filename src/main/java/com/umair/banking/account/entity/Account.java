@@ -44,6 +44,10 @@ public abstract class Account {
     @Column(nullable = false)
     private AccountStatus status;
 
+//    @Version
+//    @Column(nullable = false)
+//    private Long version;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
