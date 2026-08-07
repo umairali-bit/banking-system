@@ -1,5 +1,6 @@
 package com.umair.banking.validation.annotation;
 
+import com.umair.banking.validation.validator.PasswordValidator;
 import com.umair.banking.validation.validator.UsernameValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
@@ -7,7 +8,7 @@ import jakarta.validation.Payload;
 import java.lang.annotation.*;
 
 @Documented
-@Constraint(validatedBy = UsernameValidator.class)
+@Constraint(validatedBy = PasswordValidator.class)
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Password {

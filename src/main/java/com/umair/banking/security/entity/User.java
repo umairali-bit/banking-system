@@ -31,7 +31,7 @@ public class User {
     private String password;
 
     @Column(nullable = false)
-    private boolean enabled;
+    private boolean isEnabled;
 
     @Column(nullable = false)
     private boolean accountLocked;
@@ -43,7 +43,7 @@ public class User {
     private Set<Role> roles =  new HashSet<>();
 
     @OneToOne
-    @JoinColumn(name = "customer_id", nullable = false)
+    @JoinColumn(name = "customer_id")
     private Customer customer;
 
     @Column(nullable = false, updatable = false)
