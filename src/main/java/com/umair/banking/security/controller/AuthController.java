@@ -1,6 +1,8 @@
 package com.umair.banking.security.controller;
 
+import com.umair.banking.security.dto.request.LoginRequest;
 import com.umair.banking.security.dto.request.RegisterRequest;
+import com.umair.banking.security.dto.response.LoginResponse;
 import com.umair.banking.security.dto.response.UserResponse;
 import com.umair.banking.security.service.AuthService;
 import jakarta.validation.Valid;
@@ -27,5 +29,13 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(userResponse);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+
+        LoginResponse loginResponse = authService.login(loginRequest);
+
+        return ResponseEntity.ok(loginResponse);
     }
 }
