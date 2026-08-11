@@ -18,20 +18,48 @@ public class JwtService {
     @Value("${jwt.secret-key}")
     private String secretKey;
 
-    @Value("${jwt.expiration}")
-    private long expiration;
+    @Value("${jwt.access-token-expiration}")
+    private long accessTokenExpiration;
 
-    public String generateToken(UserDetails userDetails) {
+    @Value("${jwt.refresh-token-expiration}")
+    private long refreshTokenExpiration;
+
+
+    public String generateAccessToken(UserDetails userDetails) {
+        return generateToken(userDetails, accessTokenExpiration, "Access");
+    }
+
+    public String generateRefreshToken(UserDetails userDetails) {
+        return generateToken(userDetails, refreshTokenExpiration, "Refresh");
+    }
+
+    private String generateToken(
+            UserDetails userDetails,
+            long expiration,
+            String tokenType
+    ) {
+
         return Jwts.builder()
                 .subject(userDetails.getUsername())
+                .claim("token_type", tokenType)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(
-                        new Date(System.currentTimeMillis() + expiration)
+                        new Date(
+                                System.currentTimeMillis() + expiration
+                        )
                 )
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    public String extractTokenType(String token) {
+        return extractClaim(
+                token,
+                claims ->
+                    claims.get("token_type",String.class)
 
 
+        );
     }
 
     public String extractUsername(String token) {

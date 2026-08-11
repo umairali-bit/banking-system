@@ -3,12 +3,15 @@ package com.umair.banking.security.service.impl;
 import com.umair.banking.exception.RoleNotFoundException;
 import com.umair.banking.exception.UserAlreadyExistsException;
 import com.umair.banking.security.dto.request.LoginRequest;
+import com.umair.banking.security.dto.request.RefreshTokenRequest;
 import com.umair.banking.security.dto.request.RegisterRequest;
 import com.umair.banking.security.dto.response.LoginResponse;
+import com.umair.banking.security.dto.response.RefreshTokenResponse;
 import com.umair.banking.security.dto.response.UserResponse;
 import com.umair.banking.security.entity.Role;
 import com.umair.banking.security.entity.User;
 import com.umair.banking.security.enums.RoleName;
+import com.umair.banking.security.jwt.JwtService;
 import com.umair.banking.security.mapper.UserMapper;
 import com.umair.banking.security.repository.RoleRepository;
 import com.umair.banking.security.repository.UserRepository;
@@ -18,6 +21,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +39,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
 
     @Override
@@ -65,21 +70,33 @@ public class AuthServiceImpl implements AuthService {
                 )
         );
 
+        UserDetails  userDetails = (UserDetails) authentication.getPrincipal();
+
+        String accessToken = jwtService.generateAccessToken(userDetails);
+        String refreshToken = jwtService.generateRefreshToken(userDetails);
+
         Set<String> roles =  authentication.getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)
-                .filter(Objects::nonNull)
+                .filter(authority -> authority != null)
                 .filter(authority-> authority.startsWith("ROLE_"))
                 .map(authority ->
-                        authority.replace("ROLE_", " "))
+                        authority.replace("ROLE_", ""))
                 .collect(Collectors.toSet());
 
 
         return new LoginResponse(
                 authentication.getName(),
                 roles,
+                accessToken,
+                refreshToken, "Bearer",
                 "Login successful"
         );
+    }
+
+    @Override
+    public RefreshTokenResponse refreshToken(RefreshTokenRequest request) {
+        return null;
     }
 
     public void validateUser(RegisterRequest request) {
