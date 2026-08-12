@@ -1,8 +1,10 @@
 package com.umair.banking.security.controller;
 
 import com.umair.banking.security.dto.request.LoginRequest;
+import com.umair.banking.security.dto.request.RefreshTokenRequest;
 import com.umair.banking.security.dto.request.RegisterRequest;
 import com.umair.banking.security.dto.response.LoginResponse;
+import com.umair.banking.security.dto.response.RefreshTokenResponse;
 import com.umair.banking.security.dto.response.UserResponse;
 import com.umair.banking.security.service.AuthService;
 import jakarta.validation.Valid;
@@ -37,5 +39,13 @@ public class AuthController {
         LoginResponse loginResponse = authService.login(loginRequest);
 
         return ResponseEntity.ok(loginResponse);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) {
+
+        return ResponseEntity.ok(authService.refreshToken(refreshTokenRequest));
+
+
     }
 }

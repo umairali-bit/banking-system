@@ -16,6 +16,7 @@ import com.umair.banking.security.mapper.UserMapper;
 import com.umair.banking.security.repository.RoleRepository;
 import com.umair.banking.security.repository.UserRepository;
 import com.umair.banking.security.service.AuthService;
+import com.umair.banking.security.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -40,6 +41,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final CustomUserDetailsService customUserDetailsService;
 
 
     @Override
@@ -70,10 +72,10 @@ public class AuthServiceImpl implements AuthService {
                 )
         );
 
-        UserDetails  userDetails = (UserDetails) authentication.getPrincipal();
+        User user = (User) authentication.getPrincipal();
 
-        String accessToken = jwtService.generateAccessToken(userDetails);
-        String refreshToken = jwtService.generateRefreshToken(userDetails);
+        String accessToken = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
 
         Set<String> roles =  authentication.getAuthorities()
                 .stream()
@@ -96,16 +98,35 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public RefreshTokenResponse refreshToken(RefreshTokenRequest request) {
-        return null;
+
+        String refreshToken = request.refreshToken();
+
+        String tokenType = jwtService.extractTokenType(refreshToken);
+
+        if(!"REFRESH".equals(tokenType)) {
+            throw new IllegalArgumentException("Invalid refresh token");
+        }
+
+        Long userId = jwtService.extractUserId(refreshToken);
+
+        User user = customUserDetailsService.getUserById(userId);
+
+        if(!jwtService.isTokenValid(refreshToken, user)) {
+            throw new IllegalArgumentException("Invalid or expired refresh token");
+        }
+
+        String newAccessToken = jwtService.generateAccessToken(user);
+
+        String newRefreshToken = jwtService.generateRefreshToken(user);
+
+        return new  RefreshTokenResponse(
+                newAccessToken,
+                newRefreshToken,
+                "Bearer"
+        );
     }
 
     public void validateUser(RegisterRequest request) {
-
-        if (userRepository.existsByUsername(request.username())) {
-            throw new UserAlreadyExistsException(
-                    "User already exists"
-            );
-        }
 
         if (userRepository.existsByEmail(request.email())) {
             throw new UserAlreadyExistsException(

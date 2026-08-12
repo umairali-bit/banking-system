@@ -1,5 +1,6 @@
 package com.umair.banking.security.jwt;
 
+import com.umair.banking.security.entity.User;
 import com.umair.banking.security.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -38,19 +39,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String jwt = authHeader.substring(7);
 
-        String username = jwtService.extractUsername(jwt);
+        Long userId = jwtService.extractUserId(jwt);
 
-        if(username != null
+        if(userId != null
                 && "ACCESS".equals(jwtService.extractTokenType(jwt))
                 &&  SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+            User user = customUserDetailsService.getUserById(userId);
 
-            if(jwtService.isTokenValid(jwt, userDetails)) {
+            if(jwtService.isTokenValid(jwt, user)) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails,
+                        user,
                         null,
-                        userDetails.getAuthorities()
+                        user.getAuthorities()
                 );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);

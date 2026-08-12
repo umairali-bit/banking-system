@@ -1,12 +1,13 @@
 package com.umair.banking.security.jwt;
 
+import com.umair.banking.security.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import com.umair.banking.security.entity.User;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -25,22 +26,34 @@ public class JwtService {
     private long refreshTokenExpiration;
 
 
-    public String generateAccessToken(UserDetails userDetails) {
-        return generateToken(userDetails, accessTokenExpiration, "Access");
+    public String generateAccessToken(User user) {
+
+        return generateToken(
+                user,
+                accessTokenExpiration,
+                "ACCESS"
+        );
     }
 
-    public String generateRefreshToken(UserDetails userDetails) {
-        return generateToken(userDetails, refreshTokenExpiration, "Refresh");
+
+    public String generateRefreshToken(User user) {
+
+        return generateToken(
+                user,
+                refreshTokenExpiration,
+                "REFRESH"
+        );
     }
+
 
     private String generateToken(
-            UserDetails userDetails,
+            User user,
             long expiration,
             String tokenType
     ) {
 
         return Jwts.builder()
-                .subject(userDetails.getUsername())
+                .subject(user.getId().toString())
                 .claim("token_type", tokenType)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(
@@ -52,47 +65,69 @@ public class JwtService {
                 .compact();
     }
 
+
+    public Long extractUserId(String token) {
+
+        String subject = extractClaim(
+                token,
+                Claims::getSubject
+        );
+
+        return Long.valueOf(subject);
+    }
+
+
     public String extractTokenType(String token) {
+
         return extractClaim(
                 token,
                 claims ->
-                    claims.get("token_type",String.class)
-
-
+                        claims.get(
+                                "token_type",
+                                String.class
+                        )
         );
     }
 
-    public String extractUsername(String token) {
 
-        return extractClaim(
-                token,
-                claims -> claims.getSubject()
-        );
+    public boolean isTokenValid(
+            String token,
+            User user
+    ) {
+
+        Long userId = extractUserId(token);
+
+        return userId.equals(user.getId())
+                && !isTokenExpired(token);
     }
 
-    public boolean isTokenValid(String token,  UserDetails userDetails) {
-
-        String username = extractUsername(token);
-
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
-    }
 
     private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+
+        return extractExpiration(token)
+                .before(new Date());
     }
 
+
     private Date extractExpiration(String token) {
+
         return extractClaim(
                 token,
-                claims -> claims.getExpiration()
+                Claims::getExpiration
         );
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+
+    public <T> T extractClaim(
+            String token,
+            Function<Claims, T> claimsResolver
+    ) {
 
         Claims claims = extractAllClaims(token);
+
         return claimsResolver.apply(claims);
     }
+
 
     private Claims extractAllClaims(String token) {
 
@@ -101,17 +136,14 @@ public class JwtService {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-
-
     }
+
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+
+        byte[] keyBytes =
+                Decoders.BASE64.decode(secretKey);
+
         return Keys.hmacShaKeyFor(keyBytes);
     }
-
-
-
-
-
 }
