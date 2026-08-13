@@ -1,6 +1,7 @@
 package com.umair.banking.security.jwt;
 
 import com.umair.banking.security.entity.User;
+import com.umair.banking.security.jwt.token.TokenService;
 import com.umair.banking.security.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
+    private final TokenService tokenService;
 
 
     @Override
@@ -47,7 +49,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             User user = customUserDetailsService.getUserById(userId);
 
-            if(jwtService.isTokenValid(jwt, user)) {
+            if(jwtService.isTokenValid(jwt, user)
+               && tokenService.isTokenValid(jwt)) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         user,
                         null,

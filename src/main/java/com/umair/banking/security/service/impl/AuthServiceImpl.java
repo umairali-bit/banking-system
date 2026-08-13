@@ -1,17 +1,19 @@
 package com.umair.banking.security.service.impl;
 
-import com.umair.banking.exception.RoleNotFoundException;
-import com.umair.banking.exception.UserAlreadyExistsException;
+import com.umair.banking.exception.DuplicateEmailException;
 import com.umair.banking.security.dto.request.LoginRequest;
 import com.umair.banking.security.dto.request.RefreshTokenRequest;
 import com.umair.banking.security.dto.request.RegisterRequest;
 import com.umair.banking.security.dto.response.LoginResponse;
+import com.umair.banking.security.dto.response.LogoutResponse;
 import com.umair.banking.security.dto.response.RefreshTokenResponse;
 import com.umair.banking.security.dto.response.UserResponse;
 import com.umair.banking.security.entity.Role;
 import com.umair.banking.security.entity.User;
 import com.umair.banking.security.enums.RoleName;
 import com.umair.banking.security.jwt.JwtService;
+import com.umair.banking.security.jwt.token.TokenService;
+import com.umair.banking.security.jwt.token.TokenType;
 import com.umair.banking.security.mapper.UserMapper;
 import com.umair.banking.security.repository.RoleRepository;
 import com.umair.banking.security.repository.UserRepository;
@@ -42,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
+    private final TokenService tokenService;
 
 
     @Override
@@ -76,6 +79,14 @@ public class AuthServiceImpl implements AuthService {
 
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
+
+        tokenService.saveToken(user,
+                accessToken,
+                TokenType.ACCESS);
+
+        tokenService.saveToken(user,
+                refreshToken,
+                TokenType.REFRESH);
 
         Set<String> roles =  authentication.getAuthorities()
                 .stream()
@@ -115,6 +126,13 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("Invalid or expired refresh token");
         }
 
+        if(!tokenService.isTokenValid(refreshToken)) {
+            throw new IllegalArgumentException("Invalid or expired refresh token");
+
+        }
+
+        tokenService.revokeToken(refreshToken);
+
         String newAccessToken = jwtService.generateAccessToken(user);
 
         String newRefreshToken = jwtService.generateRefreshToken(user);
@@ -126,10 +144,30 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
+    @Override
+    public LogoutResponse logout(String accessToken) {
+
+        Long userId = jwtService.extractUserId(accessToken);
+        User user = customUserDetailsService.getUserById(userId);
+
+        if(!jwtService.isTokenValid(accessToken, user)) {
+            throw new IllegalArgumentException("Invalid or expired access token");
+        }
+
+        if(!tokenService.isTokenValid(accessToken)) {
+            throw new IllegalArgumentException("Token already expired or revoked");
+
+        }
+
+        tokenService.revokeAllUserTokens(userId);
+
+        return new LogoutResponse("Logout successful");
+    }
+
     public void validateUser(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.email())) {
-            throw new UserAlreadyExistsException(
+            throw new DuplicateEmailException(
                     "Email already exists"
             );
         }
@@ -148,6 +186,7 @@ public class AuthServiceImpl implements AuthService {
 
 
     }
+
 
 
 }
