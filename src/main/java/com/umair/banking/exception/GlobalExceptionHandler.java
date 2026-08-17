@@ -2,6 +2,7 @@ package com.umair.banking.exception;
 
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -169,6 +170,16 @@ public class GlobalExceptionHandler {
                                                                         HttpServletRequest request) {
         return buildResponse(
                 HttpStatus.FORBIDDEN,
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(DuplicateUserNameException.class)
+    public ResponseEntity<ApiErrorResponse> handleDuplicateUserNameException(DuplicateUserNameException ex,
+                                                                             HttpServletRequest request) {
+        return buildResponse(
+                HttpStatus.CONFLICT,
                 ex.getMessage(),
                 request.getRequestURI()
         );

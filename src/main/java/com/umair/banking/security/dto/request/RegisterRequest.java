@@ -15,6 +15,9 @@ public record RegisterRequest(
         String email,
 
         @Password
-        String password
+        String password,
+
+        @NotBlank(message = "Customer number is required")
+        String customerNumber
 ) {
 }

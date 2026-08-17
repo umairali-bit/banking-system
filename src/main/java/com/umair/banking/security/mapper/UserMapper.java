@@ -16,7 +16,7 @@ public class UserMapper {
 
     public User createUser(RegisterRequest request,
                            String encodedPassword,
-                           Role customRole) {
+                           Role customerRole) {
         User user = new User();
 
         user.setUsername(request.username().trim());
@@ -27,7 +27,7 @@ public class UserMapper {
         user.setAccountLocked(false);
 
         Set<Role> roles = new HashSet<>();
-        roles.add(customRole);
+        roles.add(customerRole);
 
         user.setRoles(roles);
 

@@ -1,6 +1,9 @@
 package com.umair.banking.security.service.impl;
 
+import com.umair.banking.customer.entity.Customer;
+import com.umair.banking.customer.repository.CustomerRepository;
 import com.umair.banking.exception.DuplicateEmailException;
+import com.umair.banking.exception.DuplicateUserNameException;
 import com.umair.banking.security.dto.request.LoginRequest;
 import com.umair.banking.security.dto.request.RefreshTokenRequest;
 import com.umair.banking.security.dto.request.RegisterRequest;
@@ -45,12 +48,15 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
     private final TokenService tokenService;
+    private final CustomerRepository customerRepository;
 
 
     @Override
     public UserResponse register(RegisterRequest request) {
 
         validateUser(request);
+
+        Customer customer = getAndValidateCustomer(request);
 
         Role customerRole = getCustomerRole();
 
@@ -59,6 +65,8 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userMapper.createUser(
                 request, encodedPassword, customerRole);
+
+        user.setCustomer(customer);
 
         User savedUser = userRepository.save(user);
 
@@ -88,11 +96,11 @@ public class AuthServiceImpl implements AuthService {
                 refreshToken,
                 TokenType.REFRESH);
 
-        Set<String> roles =  authentication.getAuthorities()
+        Set<String> roles = authentication.getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .filter(authority -> authority != null)
-                .filter(authority-> authority.startsWith("ROLE_"))
+                .filter(authority -> authority.startsWith("ROLE_"))
                 .map(authority ->
                         authority.replace("ROLE_", ""))
                 .collect(Collectors.toSet());
@@ -114,7 +122,7 @@ public class AuthServiceImpl implements AuthService {
 
         String tokenType = jwtService.extractTokenType(refreshToken);
 
-        if(!"REFRESH".equals(tokenType)) {
+        if (!"REFRESH".equals(tokenType)) {
             throw new IllegalArgumentException("Invalid refresh token");
         }
 
@@ -122,11 +130,11 @@ public class AuthServiceImpl implements AuthService {
 
         User user = customUserDetailsService.getUserById(userId);
 
-        if(!jwtService.isTokenValid(refreshToken, user)) {
+        if (!jwtService.isTokenValid(refreshToken, user)) {
             throw new IllegalArgumentException("Invalid or expired refresh token");
         }
 
-        if(!tokenService.isTokenValid(refreshToken)) {
+        if (!tokenService.isTokenValid(refreshToken)) {
             throw new IllegalArgumentException("Invalid or expired refresh token");
 
         }
@@ -137,7 +145,7 @@ public class AuthServiceImpl implements AuthService {
 
         String newRefreshToken = jwtService.generateRefreshToken(user);
 
-        return new  RefreshTokenResponse(
+        return new RefreshTokenResponse(
                 newAccessToken,
                 newRefreshToken,
                 "Bearer"
@@ -150,11 +158,11 @@ public class AuthServiceImpl implements AuthService {
         Long userId = jwtService.extractUserId(accessToken);
         User user = customUserDetailsService.getUserById(userId);
 
-        if(!jwtService.isTokenValid(accessToken, user)) {
+        if (!jwtService.isTokenValid(accessToken, user)) {
             throw new IllegalArgumentException("Invalid or expired access token");
         }
 
-        if(!tokenService.isTokenValid(accessToken)) {
+        if (!tokenService.isTokenValid(accessToken)) {
             throw new IllegalArgumentException("Token already expired or revoked");
 
         }
@@ -169,6 +177,13 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateEmailException(
                     "Email already exists"
+            );
+
+        }
+
+        if(userRepository.existsByUsername(request.username())) {
+            throw new DuplicateUserNameException(
+                    "User name already exists"
             );
         }
     }
@@ -186,6 +201,26 @@ public class AuthServiceImpl implements AuthService {
 
 
     }
+
+    public Customer getAndValidateCustomer(RegisterRequest request) {
+
+        Customer customer = customerRepository.findByCustomerNumber(request.customerNumber())
+                .orElseThrow(() -> new IllegalArgumentException("Customer number not found with number "
+                        + request.customerNumber()));
+
+        if (!customer.getEmail().equalsIgnoreCase(request.email())) {
+            throw new IllegalArgumentException("Registration email does not match customer email");
+        }
+
+        if (userRepository.existsByCustomerId(customer.getId())) {
+            throw new IllegalArgumentException("Customer already has an online banking account");
+        }
+
+        return customer;
+
+
+    }
+
 
 
 
