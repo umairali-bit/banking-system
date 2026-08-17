@@ -21,6 +21,7 @@ import com.umair.banking.transaction.mapper.TransactionMapper;
 import com.umair.banking.transaction.repository.TransactionRepository;
 import com.umair.banking.transaction.service.TransactionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -109,6 +110,10 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
+                    "or @authorizationService.isAccountOwner(#depositRequest.accountId(), authentication)"
+    )
     public DepositResponse deposit(DepositRequest depositRequest) {
 
         Account account = getActiveAccount(depositRequest.accountId());;
@@ -130,6 +135,10 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
+                    "or @authorizationService.isAccountOwner(#withdrawRequest.accountId(), authentication)"
+    )
     public WithdrawResponse withdraw(WithdrawRequest withdrawRequest) {
 
         Account account =
@@ -169,6 +178,11 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
+                    "or @authorizationService.isAccountOwner(" +
+                    "#transferRequest.sourceAccountId(), authentication)"
+    )
     public TransferResponse transfer(TransferRequest transferRequest) {
 
         Account sourceAccount = getActiveAccount(
@@ -210,6 +224,10 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionMapper.toTransferResponse(transaction);
     }
 
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
+                    "or @authorizationService.isAccountOwner(#transactionId, authentication)"
+    )
     @Override
     @Transactional(readOnly = true)
     public TransactionResponse getTransactionById(Long transactionId) {
@@ -223,6 +241,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public TransactionResponse getTransactionByReference(String transactionReference) {
 
         Transaction transaction = transactionRepository.findByTransactionReference(transactionReference)
@@ -234,6 +253,10 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
+                    "or @authorizationService.isAccountOwner(#accountId, authentication)"
+    )
     public List<TransactionResponse> getTransactionsByAccountId(Long accountId) {
 
         getActiveAccount(accountId);
@@ -247,6 +270,9 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')"
+    )
     public List<TransactionResponse> getTransactionsByCustomerNumber(String customerNumber) {
 
         return transactionRepository.findByCustomerNumber(customerNumber)
@@ -257,6 +283,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public List<TransactionResponse> getAllTransactions() {
         return transactionRepository.findAll()
                 .stream()

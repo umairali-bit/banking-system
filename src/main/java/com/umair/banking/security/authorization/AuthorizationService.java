@@ -6,4 +6,6 @@ public interface AuthorizationService {
 
     boolean isCustomerOwner(Long customerId, Authentication authentication);
     boolean isAccountOwner(Long accountId, Authentication authentication);
+    boolean isTransactionOwner(Long transactionId, Authentication authentication
+    );
 }
