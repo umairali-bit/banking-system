@@ -14,6 +14,7 @@ import com.umair.banking.exception.CustomerNotFoundException;
 import com.umair.banking.generator.AccountNumberGenerator;
 import com.umair.banking.generator.BusinessNumberGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -29,7 +30,9 @@ public class BusinessAccountServiceImpl implements BusinessAccountService {
     public final AccountNumberGenerator accountNumberGenerator;
     public final CustomerRepository customerRepository;
 
-
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')"
+    )
     @Override
     public BusinessAccountResponse createBusinessAccount(CreateBusinessAccountRequest request) {
 
@@ -54,7 +57,10 @@ public class BusinessAccountServiceImpl implements BusinessAccountService {
 
         return toResponse(businessAccount);
     }
-
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
+                    "or @authorizationService.isAccountOwner(#id, authentication)"
+    )
     @Override
     public BusinessAccountResponse getById(Long id) {
 
@@ -66,6 +72,9 @@ public class BusinessAccountServiceImpl implements BusinessAccountService {
         return toResponse(businessAccount);
     }
 
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')"
+    )
     @Override
     public List<BusinessAccountResponse> getAll() {
 

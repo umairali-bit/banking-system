@@ -11,6 +11,7 @@ import com.umair.banking.account.repository.AccountRepository;
 import com.umair.banking.account.service.SavingsAccountService;
 import com.umair.banking.generator.AccountNumberGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 
@@ -32,6 +33,9 @@ public class SavingsAccountServiceImpl implements SavingsAccountService {
 
     private static final BigDecimal DEFAULT_INTEREST_RATE = BigDecimal.valueOf(2.50);
 
+    @PreAuthorize(
+            "hasAnyRole('ADMIN','MANAGER','EMPLOYEE')"
+    )
     @Override
     public SavingsAccountResponse createSavingsAccount(CreateSavingsAccountRequest request) {
 
@@ -59,6 +63,10 @@ public class SavingsAccountServiceImpl implements SavingsAccountService {
 
     }
 
+    @PreAuthorize(
+            "hasAnyRole('ADMIN','MANAGER','EMPLOYEE') " +
+                    "or @authorizationService.isAccountOwner(#id, authentication)"
+    )
     @Override
     public SavingsAccountResponse getById(Long id) {
 
@@ -68,7 +76,9 @@ public class SavingsAccountServiceImpl implements SavingsAccountService {
         return toResponse(savingsAccount);
     }
 
-
+    @PreAuthorize(
+            "hasAnyRole('ADMIN','MANAGER','EMPLOYEE')"
+    )
     @Override
     public List<SavingsAccountResponse> getAll() {
 

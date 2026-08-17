@@ -14,6 +14,7 @@ import com.umair.banking.account.repository.AccountRepository;
 import com.umair.banking.account.service.CheckingAccountService;
 import com.umair.banking.generator.AccountNumberGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -28,7 +29,9 @@ public class CheckingAccountServiceImpl implements CheckingAccountService {
     private final CustomerRepository customerRepository;
 
 
-
+    @PreAuthorize(
+            "hasAnyRole('ADMIN','MANAGER','EMPLOYEE')"
+    )
     @Override
     public CheckingAccountResponse createCheckingAccount(CreateCheckingAccountRequest request) {
 
@@ -62,7 +65,10 @@ public class CheckingAccountServiceImpl implements CheckingAccountService {
             case PKR -> BigDecimal.valueOf(250000);
         };
     }
-
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
+                    "or @authorizationService.isAccountOwner(#id, authentication)"
+    )
     @Override
     public CheckingAccountResponse getById(Long id) {
 
@@ -75,6 +81,9 @@ public class CheckingAccountServiceImpl implements CheckingAccountService {
         return toResponse(checkingAccount);
     }
 
+    @PreAuthorize(
+            "hasAnyRole('ADMIN','MANAGER','EMPLOYEE')"
+    )
     @Override
     public List<CheckingAccountResponse> getAll() {
 
