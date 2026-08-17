@@ -7,6 +7,7 @@ import com.umair.banking.account.service.AccountLifeCycleService;
 import com.umair.banking.exception.AccountNotFoundException;
 import com.umair.banking.exception.InvalidAccountStateException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ public class AccountLifeCycleServiceImpl implements AccountLifeCycleService {
     }
 
 
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @Override
     public void freezeAccount(Long accountId) {
 
@@ -44,7 +46,7 @@ public class AccountLifeCycleServiceImpl implements AccountLifeCycleService {
         accountRepository.save(account);
 
     }
-
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @Override
     public void activateAccount(Long accountId) {
 
@@ -63,7 +65,7 @@ public class AccountLifeCycleServiceImpl implements AccountLifeCycleService {
         accountRepository.save(account);
 
     }
-
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @Override
     public void closeAccount(Long accountId) {
 

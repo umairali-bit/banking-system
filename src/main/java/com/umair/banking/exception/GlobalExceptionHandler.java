@@ -4,10 +4,11 @@ package com.umair.banking.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
+
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -158,6 +159,16 @@ public class GlobalExceptionHandler {
                                                                              HttpServletRequest request) {
         return buildResponse(
                 HttpStatus.CONFLICT,
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDeniedException(AccessDeniedException ex,
+                                                                        HttpServletRequest request) {
+        return buildResponse(
+                HttpStatus.FORBIDDEN,
                 ex.getMessage(),
                 request.getRequestURI()
         );

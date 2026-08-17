@@ -12,6 +12,7 @@ import com.umair.banking.exception.DuplicateEmailException;
 import com.umair.banking.exception.DuplicatePhoneNumberException;
 import com.umair.banking.generator.CustomerNumberGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -52,6 +53,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
 
+
     private Customer findCustomerById(Long id) {
 
         return customerRepository
@@ -73,7 +75,9 @@ public class CustomerServiceImpl implements CustomerService {
 
 
 
-
+    @PreAuthorize(
+            "hasAnyRole('ADMIN','MANAGER','EMPLOYEE')"
+    )
     @Override
     public CustomerResponse createCustomer(CustomerRequest request) {
 
@@ -90,6 +94,9 @@ public class CustomerServiceImpl implements CustomerService {
         return toResponse(customer);
     }
 
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')"
+    )
     @Override
     public CustomerResponse updateCustomer(Long customerId, CustomerRequest request) {
 
@@ -105,6 +112,9 @@ public class CustomerServiceImpl implements CustomerService {
         return toResponse(customer);
     }
 
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')"
+    )
     @Override
     public CustomerResponse patch(Long customerId, PatchCustomerRequest request) {
 
@@ -132,6 +142,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Override
     public void deleteCustomer(Long id) {
 
@@ -141,6 +152,10 @@ public class CustomerServiceImpl implements CustomerService {
 
     }
 
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
+                    "or @authorizationService.isCustomerOwner(#id, authentication)"
+    )
     @Override
     public CustomerResponse getById(Long id) {
 
@@ -148,7 +163,9 @@ public class CustomerServiceImpl implements CustomerService {
 
         return toResponse(customer);
     }
-
+    @PreAuthorize(
+            "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')"
+    )
     @Override
     public List<CustomerResponse> getAll() {
         return customerRepository.findAll()
