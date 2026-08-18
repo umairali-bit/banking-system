@@ -11,6 +11,8 @@ import com.umair.banking.exception.CustomerNotFoundException;
 import com.umair.banking.exception.DuplicateEmailException;
 import com.umair.banking.exception.DuplicatePhoneNumberException;
 import com.umair.banking.generator.CustomerNumberGenerator;
+import com.umair.banking.notification.dto.EmailNotification;
+import com.umair.banking.notification.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,8 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
 
     private final CustomerNumberGenerator customerNumberGenerator;
+
+    private final EmailService emailService;
 
     private CustomerResponse toResponse(Customer customer) {
 
@@ -90,6 +94,18 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setCustomerNumber(customerNumberGenerator.generateUniqueCustomerNumber());
 
         customer = customerRepository.save(customer);
+
+        EmailNotification notification = new EmailNotification(
+                customer.getEmail(),
+                "Welcome to Online Banking",
+                "Hello " + customer.getFirstName()
+                        + ", \n\nYour customer number is: "
+                        + customer.getCustomerNumber()
+                        + " \n\nUse this customer number to register for online banking."
+
+        );
+
+        emailService.sendEmail(notification);
 
         return toResponse(customer);
     }
