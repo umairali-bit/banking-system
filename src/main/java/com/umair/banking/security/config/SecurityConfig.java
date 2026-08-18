@@ -1,6 +1,7 @@
 package com.umair.banking.security.config;
 
 import com.umair.banking.security.jwt.JwtAuthenticationFilter;
+import com.umair.banking.security.oauth2.oAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final oAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
@@ -30,7 +32,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
+                                SessionCreationPolicy.IF_REQUIRED
                         ))
                 .authorizeHttpRequests(
                         authorize -> authorize
@@ -40,7 +42,11 @@ public class SecurityConfig {
                                                  "/api/v1/auth/refresh"
                                 ).permitAll()
                                 .anyRequest()
-                                .authenticated())
+                                .authenticated()
+                )
+                .oauth2Login(oauth2 -> {
+                    oauth2.successHandler(oAuth2AuthenticationSuccessHandler);
+                })
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
