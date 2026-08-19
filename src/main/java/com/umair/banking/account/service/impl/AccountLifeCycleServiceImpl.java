@@ -4,6 +4,8 @@ import com.umair.banking.account.entity.Account;
 import com.umair.banking.account.enums.AccountStatus;
 import com.umair.banking.account.repository.AccountRepository;
 import com.umair.banking.account.service.AccountLifeCycleService;
+import com.umair.banking.audit.enums.AuditAction;
+import com.umair.banking.audit.service.AuditService;
 import com.umair.banking.exception.AccountNotFoundException;
 import com.umair.banking.exception.InvalidAccountStateException;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AccountLifeCycleServiceImpl implements AccountLifeCycleService {
 
     private final AccountRepository accountRepository;
+    private final AuditService auditService;
 
     private Account findAccountById(Long accountId) {
 
@@ -44,6 +47,15 @@ public class AccountLifeCycleServiceImpl implements AccountLifeCycleService {
         account.setStatus(AccountStatus.FROZEN);
 
         accountRepository.save(account);
+
+        auditService.log(
+                AuditAction.ACCOUNT_FROZEN,
+                "ACCOUNT",
+                account.getId(),
+                "Account frozen"
+        );
+
+
 
     }
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")

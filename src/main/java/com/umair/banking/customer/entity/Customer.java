@@ -2,6 +2,7 @@ package com.umair.banking.customer.entity;
 
 
 import com.umair.banking.account.entity.Account;
+import com.umair.banking.audit.entity.AuditableEntity;
 import com.umair.banking.validation.annotation.ValidName;
 import com.umair.banking.validation.annotation.ValidPhone;
 import jakarta.persistence.*;
@@ -17,7 +18,7 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "customers")
-public class Customer {
+public class Customer extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,8 +39,6 @@ public class Customer {
     @Column(nullable = false, unique = true)
     private String phoneNumber;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
     @OneToMany(
             mappedBy = "customer",
@@ -48,9 +47,5 @@ public class Customer {
     )
     private List<Account> accounts = new ArrayList<>();
 
-    @PrePersist
-    public void prePersist() {
-        createdAt = LocalDateTime.now();
-    }
 
 }
