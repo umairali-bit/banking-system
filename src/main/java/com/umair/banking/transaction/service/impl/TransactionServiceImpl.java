@@ -4,6 +4,8 @@ import com.umair.banking.account.entity.Account;
 import com.umair.banking.account.enums.AccountStatus;
 import com.umair.banking.account.enums.Currency;
 import com.umair.banking.account.repository.AccountRepository;
+import com.umair.banking.audit.enums.AuditAction;
+import com.umair.banking.audit.service.AuditService;
 import com.umair.banking.currency.service.CurrencyConversionService;
 import com.umair.banking.exception.AccountNotFoundException;
 import com.umair.banking.exception.InsufficientFundsExceptions;
@@ -37,6 +39,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final AccountRepository accountRepository;
     private final CurrencyConversionService currencyConversionService;
     private final TransactionMapper transactionMapper;
+    private final AuditService auditService;
 
 
     private void validateAccountStatus(Account account) {
@@ -130,6 +133,13 @@ public class TransactionServiceImpl implements TransactionService {
 
         transaction = save(transaction);
 
+        auditService.log(
+                AuditAction.DEPOSIT,
+                "TRANSACTION",
+                transaction.getId(),
+                "Deposit complete"
+        );
+
         return transactionMapper.toDepositResponse(transaction);
     }
 
@@ -172,6 +182,13 @@ public class TransactionServiceImpl implements TransactionService {
                 withdrawRequest.amount()
         );
         transaction = save(transaction);
+
+        auditService.log(
+                AuditAction.WITHDRAW,
+                "TRANSACTION",
+                transaction.getId(),
+                "Withdraw complete"
+        );
 
         return transactionMapper.toWithdrawResponse(transaction);
     }
@@ -219,6 +236,13 @@ public class TransactionServiceImpl implements TransactionService {
         );
 
         transaction = save(transaction);
+
+        auditService.log(
+                AuditAction.TRANSFER,
+                "TRANSACTION",
+                transaction.getId(),
+                "Transaction complete"
+        );
 
 
         return transactionMapper.toTransferResponse(transaction);

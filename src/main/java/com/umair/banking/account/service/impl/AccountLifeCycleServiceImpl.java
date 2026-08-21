@@ -76,6 +76,13 @@ public class AccountLifeCycleServiceImpl implements AccountLifeCycleService {
 
         accountRepository.save(account);
 
+        auditService.log(
+                AuditAction.ACCOUNT_ACTIVATED,
+                "ACCOUNT",
+                account.getId(),
+                "Account activated"
+        );
+
     }
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @Override
@@ -90,6 +97,13 @@ public class AccountLifeCycleServiceImpl implements AccountLifeCycleService {
         account.setStatus(AccountStatus.CLOSED);
 
         accountRepository.save(account);
+
+        auditService.log(
+                AuditAction.ACCOUNT_CLOSED,
+                "ACCOUNT",
+                account.getId(),
+                "Account closed"
+        );
 
     }
 }

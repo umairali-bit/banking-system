@@ -1,6 +1,8 @@
 package com.umair.banking.customer.service.impl;
 
 
+import com.umair.banking.audit.enums.AuditAction;
+import com.umair.banking.audit.service.AuditService;
 import com.umair.banking.customer.dto.request.CustomerRequest;
 import com.umair.banking.customer.dto.request.PatchCustomerRequest;
 import com.umair.banking.customer.dto.response.CustomerResponse;
@@ -28,6 +30,8 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerNumberGenerator customerNumberGenerator;
 
     private final EmailService emailService;
+
+    private final AuditService auditService;
 
     private CustomerResponse toResponse(Customer customer) {
 
@@ -77,6 +81,18 @@ public class CustomerServiceImpl implements CustomerService {
         }
     }
 
+    private void validateEmailForUpdate(String email, Long customerId) {
+        if(customerRepository.existsByEmailAndIdNot(email, customerId)){
+            throw new DuplicateEmailException("Customer with email " + email + " already exists");
+        }
+    }
+
+    private void validatePhoneNumberForUpdate(String phoneNumber, Long customerId) {
+        if(customerRepository.existsByPhoneNumberAndIdNot(phoneNumber, customerId)) {
+            throw new DuplicatePhoneNumberException("Customer with phone number " + phoneNumber + " already exists");
+        }
+    }
+
 
 
     @PreAuthorize(
@@ -107,7 +123,16 @@ public class CustomerServiceImpl implements CustomerService {
 
         emailService.sendEmail(notification);
 
+        auditService.log(
+                AuditAction.CUSTOMER_CREATED,
+                "CUSTOMER",
+                customer.getId(),
+                "Customer created"
+        );
+
         return toResponse(customer);
+
+
     }
 
     @PreAuthorize(
@@ -118,12 +143,22 @@ public class CustomerServiceImpl implements CustomerService {
 
         Customer customer = findCustomerById(customerId);
 
+        validateEmailForUpdate(request.email(), customerId);
+        validatePhoneNumberForUpdate(request.phoneNumber(), customerId);
+
         customer.setFirstName(request.firstName());
         customer.setLastName(request.lastName());
         customer.setEmail(request.email());
         customer.setPhoneNumber(request.phoneNumber());
 
         customer = customerRepository.save(customer);
+
+        auditService.log(
+                AuditAction.CUSTOMER_UPDATED,
+                "CUSTOMER",
+                customer.getId(),
+                "Customer updated"
+        );
 
         return toResponse(customer);
     }
@@ -154,6 +189,13 @@ public class CustomerServiceImpl implements CustomerService {
 
         customer = customerRepository.save(customer);
 
+        auditService.log(
+                AuditAction.CUSTOMER_UPDATED,
+                "CUSTOMER",
+                customer.getId(),
+                "Customer updated"
+        );
+
         return  toResponse(customer);
 
     }
@@ -165,6 +207,13 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = findCustomerById(id);
 
         customerRepository.delete(customer);
+
+        auditService.log(
+                AuditAction.CUSTOMER_DELETED,
+                "CUSTOMER",
+                customer.getId(),
+                "Customer deleted"
+        );
 
     }
 
