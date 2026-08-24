@@ -1,6 +1,7 @@
 package com.umair.banking.customer.service.impl;
 
 
+import com.umair.banking.aop.annotation.Auditable;
 import com.umair.banking.audit.enums.AuditAction;
 import com.umair.banking.audit.service.AuditService;
 import com.umair.banking.customer.dto.request.CustomerRequest;
@@ -138,6 +139,11 @@ public class CustomerServiceImpl implements CustomerService {
     @PreAuthorize(
             "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')"
     )
+    @Auditable(
+            action = AuditAction.CUSTOMER_UPDATED,
+            entityType = "CUSTOMER",
+            details = "Customer updated"
+    )
     @Override
     public CustomerResponse updateCustomer(Long customerId, CustomerRequest request) {
 
@@ -153,18 +159,23 @@ public class CustomerServiceImpl implements CustomerService {
 
         customer = customerRepository.save(customer);
 
-        auditService.log(
-                AuditAction.CUSTOMER_UPDATED,
-                "CUSTOMER",
-                customer.getId(),
-                "Customer updated"
-        );
+//        auditService.log(
+//                AuditAction.CUSTOMER_UPDATED,
+//                "CUSTOMER",
+//                customer.getId(),
+//                "Customer updated"
+//        );
 
         return toResponse(customer);
     }
 
     @PreAuthorize(
             "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')"
+    )
+    @Auditable(
+            action = AuditAction.CUSTOMER_UPDATED,
+            entityType = "CUSTOMER",
+            details = "Customer updated"
     )
     @Override
     public CustomerResponse patch(Long customerId, PatchCustomerRequest request) {
@@ -180,27 +191,40 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         if(request.email() != null && !request.email().isBlank()) {
+            validateEmailForUpdate(
+                    request.email(),
+                    customerId
+            );
             customer.setEmail(request.email());
         }
 
         if(request.phoneNumber() != null && !request.phoneNumber().isBlank()) {
+            validatePhoneNumberForUpdate(
+                    request.phoneNumber(),
+                    customerId
+            );
             customer.setPhoneNumber(request.phoneNumber());
         }
 
         customer = customerRepository.save(customer);
 
-        auditService.log(
-                AuditAction.CUSTOMER_UPDATED,
-                "CUSTOMER",
-                customer.getId(),
-                "Customer updated"
-        );
+//        auditService.log(
+//                AuditAction.CUSTOMER_UPDATED,
+//                "CUSTOMER",
+//                customer.getId(),
+//                "Customer updated"
+//        );
 
         return  toResponse(customer);
 
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @Auditable(
+            action = AuditAction.CUSTOMER_DELETED,
+            entityType = "CUSTOMER",
+            details = "Customer deleted"
+    )
     @Override
     public void deleteCustomer(Long id) {
 
@@ -208,12 +232,12 @@ public class CustomerServiceImpl implements CustomerService {
 
         customerRepository.delete(customer);
 
-        auditService.log(
-                AuditAction.CUSTOMER_DELETED,
-                "CUSTOMER",
-                customer.getId(),
-                "Customer deleted"
-        );
+//        auditService.log(
+//                AuditAction.CUSTOMER_DELETED,
+//                "CUSTOMER",
+//                customer.getId(),
+//                "Customer deleted"
+//        );
 
     }
 

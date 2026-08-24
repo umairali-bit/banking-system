@@ -4,8 +4,8 @@ import com.umair.banking.account.entity.Account;
 import com.umair.banking.account.enums.AccountStatus;
 import com.umair.banking.account.repository.AccountRepository;
 import com.umair.banking.account.service.AccountLifeCycleService;
+import com.umair.banking.aop.annotation.Auditable;
 import com.umair.banking.audit.enums.AuditAction;
-import com.umair.banking.audit.service.AuditService;
 import com.umair.banking.exception.AccountNotFoundException;
 import com.umair.banking.exception.InvalidAccountStateException;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AccountLifeCycleServiceImpl implements AccountLifeCycleService {
 
     private final AccountRepository accountRepository;
-    private final AuditService auditService;
 
     private Account findAccountById(Long accountId) {
 
@@ -31,6 +30,11 @@ public class AccountLifeCycleServiceImpl implements AccountLifeCycleService {
 
 
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+    @Auditable(
+            action = AuditAction.ACCOUNT_FROZEN,
+            entityType = "ACCOUNT",
+            details = "Account frozen"
+    )
     @Override
     public void freezeAccount(Long accountId) {
 
@@ -48,17 +52,22 @@ public class AccountLifeCycleServiceImpl implements AccountLifeCycleService {
 
         accountRepository.save(account);
 
-        auditService.log(
-                AuditAction.ACCOUNT_FROZEN,
-                "ACCOUNT",
-                account.getId(),
-                "Account frozen"
-        );
+//        auditService.log(
+//                AuditAction.ACCOUNT_FROZEN,
+//                "ACCOUNT",
+//                account.getId(),
+//                "Account frozen"
+//        );
 
 
 
     }
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+    @Auditable(
+            action = AuditAction.ACCOUNT_ACTIVATED,
+            entityType = "ACCOUNT",
+            details = "Account activated"
+    )
     @Override
     public void activateAccount(Long accountId) {
 
@@ -76,15 +85,20 @@ public class AccountLifeCycleServiceImpl implements AccountLifeCycleService {
 
         accountRepository.save(account);
 
-        auditService.log(
-                AuditAction.ACCOUNT_ACTIVATED,
-                "ACCOUNT",
-                account.getId(),
-                "Account activated"
-        );
+//        auditService.log(
+//                AuditAction.ACCOUNT_ACTIVATED,
+//                "ACCOUNT",
+//                account.getId(),
+//                "Account activated"
+//        );
 
     }
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+    @Auditable(
+            action = AuditAction.ACCOUNT_CLOSED,
+            entityType = "ACCOUNT",
+            details = "Account closed"
+    )
     @Override
     public void closeAccount(Long accountId) {
 
@@ -98,12 +112,12 @@ public class AccountLifeCycleServiceImpl implements AccountLifeCycleService {
 
         accountRepository.save(account);
 
-        auditService.log(
-                AuditAction.ACCOUNT_CLOSED,
-                "ACCOUNT",
-                account.getId(),
-                "Account closed"
-        );
+//        auditService.log(
+//                AuditAction.ACCOUNT_CLOSED,
+//                "ACCOUNT",
+//                account.getId(),
+//                "Account closed"
+//        );
 
     }
 }
