@@ -2,7 +2,7 @@ package com.umair.banking.exception;
 
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.coyote.Response;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -180,6 +180,16 @@ public class GlobalExceptionHandler {
                                                                              HttpServletRequest request) {
         return buildResponse(
                 HttpStatus.CONFLICT,
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadCredentialException(BadCredentialsException ex,
+                                                                         HttpServletRequest request) {
+        return buildResponse(
+                HttpStatus.UNAUTHORIZED,
                 ex.getMessage(),
                 request.getRequestURI()
         );

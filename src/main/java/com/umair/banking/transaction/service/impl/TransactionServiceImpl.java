@@ -4,6 +4,7 @@ import com.umair.banking.account.entity.Account;
 import com.umair.banking.account.enums.AccountStatus;
 import com.umair.banking.account.enums.Currency;
 import com.umair.banking.account.repository.AccountRepository;
+import com.umair.banking.aop.annotation.LogExecutionTime;
 import com.umair.banking.audit.enums.AuditAction;
 import com.umair.banking.audit.service.AuditService;
 import com.umair.banking.currency.service.CurrencyConversionService;
@@ -113,6 +114,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
+    @LogExecutionTime
     @PreAuthorize(
             "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
                     "or @authorizationService.isAccountOwner(#depositRequest.accountId(), authentication)"
@@ -145,6 +147,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
+    @LogExecutionTime
     @PreAuthorize(
             "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
                     "or @authorizationService.isAccountOwner(#withdrawRequest.accountId(), authentication)"
@@ -194,6 +197,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @LogExecutionTime
     @Transactional
     @PreAuthorize(
             "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
