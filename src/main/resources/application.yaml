@@ -53,3 +53,23 @@ jwt:
 currency:
   exchange:
     base-url: https://api.frankfurter.dev
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+  endpoint:
+    health:
+      show-details: always
+
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: Banking System
+    description: Banking application backend
+    version: 1.0.0
