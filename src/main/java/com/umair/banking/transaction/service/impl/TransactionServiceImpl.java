@@ -12,6 +12,7 @@ import com.umair.banking.exception.AccountNotFoundException;
 import com.umair.banking.exception.InsufficientFundsExceptions;
 import com.umair.banking.exception.InvalidAccountStateException;
 import com.umair.banking.exception.TransactionNotFoundException;
+import com.umair.banking.monitoring.annotation.TrackTransactionMetric;
 import com.umair.banking.monitoring.metrics.BankingMetrics;
 import com.umair.banking.transaction.dto.request.DepositRequest;
 import com.umair.banking.transaction.dto.request.TransferRequest;
@@ -117,6 +118,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
+    @TrackTransactionMetric(TransactionType.DEPOSIT)
     @LogExecutionTime
     @PreAuthorize(
             "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
@@ -145,13 +147,12 @@ public class TransactionServiceImpl implements TransactionService {
                 "Deposit complete"
         );
 
-        bankingMetrics.incrementTransaction(TransactionType.DEPOSIT);
-
         return transactionMapper.toDepositResponse(transaction);
     }
 
     @Override
     @Transactional
+    @TrackTransactionMetric(TransactionType.WITHDRAW)
     @LogExecutionTime
     @PreAuthorize(
             "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
@@ -198,13 +199,16 @@ public class TransactionServiceImpl implements TransactionService {
                 "Withdraw complete"
         );
 
-        bankingMetrics.incrementTransaction(TransactionType.WITHDRAW);
+        bankingMetrics.incrementTransaction(
+                TransactionType.WITHDRAW,
+                "SUCCESS");
 
         return transactionMapper.toWithdrawResponse(transaction);
     }
 
     @Override
     @LogExecutionTime
+    @TrackTransactionMetric(TransactionType.TRANSFER)
     @Transactional
     @PreAuthorize(
             "hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE') " +
@@ -255,7 +259,9 @@ public class TransactionServiceImpl implements TransactionService {
                 "Transaction complete"
         );
 
-        bankingMetrics.incrementTransaction(TransactionType.TRANSFER);
+        bankingMetrics.incrementTransaction(
+                TransactionType.TRANSFER,
+                "SUCCESS");
 
 
         return transactionMapper.toTransferResponse(transaction);

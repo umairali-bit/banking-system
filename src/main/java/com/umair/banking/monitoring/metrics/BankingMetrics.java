@@ -14,10 +14,11 @@ public class BankingMetrics {
     }
 
 
-    public void incrementTransaction(TransactionType transactionType) {
+    public void incrementTransaction(TransactionType transactionType, String status) {
 
         meterRegistry.counter("banking.transactions.total",
-                "type", transactionType.name()).increment();
+                "type", transactionType.name(),
+                       "status", status) .increment();
 
     }
 }
