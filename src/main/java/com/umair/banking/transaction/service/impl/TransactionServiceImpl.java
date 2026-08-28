@@ -12,6 +12,7 @@ import com.umair.banking.exception.AccountNotFoundException;
 import com.umair.banking.exception.InsufficientFundsExceptions;
 import com.umair.banking.exception.InvalidAccountStateException;
 import com.umair.banking.exception.TransactionNotFoundException;
+import com.umair.banking.monitoring.metrics.BankingMetrics;
 import com.umair.banking.transaction.dto.request.DepositRequest;
 import com.umair.banking.transaction.dto.request.TransferRequest;
 import com.umair.banking.transaction.dto.request.WithdrawRequest;
@@ -20,6 +21,7 @@ import com.umair.banking.transaction.dto.response.TransactionResponse;
 import com.umair.banking.transaction.dto.response.TransferResponse;
 import com.umair.banking.transaction.dto.response.WithdrawResponse;
 import com.umair.banking.transaction.entity.Transaction;
+import com.umair.banking.transaction.enums.TransactionType;
 import com.umair.banking.transaction.mapper.TransactionMapper;
 import com.umair.banking.transaction.repository.TransactionRepository;
 import com.umair.banking.transaction.service.TransactionService;
@@ -41,6 +43,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final CurrencyConversionService currencyConversionService;
     private final TransactionMapper transactionMapper;
     private final AuditService auditService;
+    private final BankingMetrics bankingMetrics;
 
 
     private void validateAccountStatus(Account account) {
@@ -142,6 +145,8 @@ public class TransactionServiceImpl implements TransactionService {
                 "Deposit complete"
         );
 
+        bankingMetrics.incrementTransaction(TransactionType.DEPOSIT);
+
         return transactionMapper.toDepositResponse(transaction);
     }
 
@@ -192,6 +197,8 @@ public class TransactionServiceImpl implements TransactionService {
                 transaction.getId(),
                 "Withdraw complete"
         );
+
+        bankingMetrics.incrementTransaction(TransactionType.WITHDRAW);
 
         return transactionMapper.toWithdrawResponse(transaction);
     }
@@ -247,6 +254,8 @@ public class TransactionServiceImpl implements TransactionService {
                 transaction.getId(),
                 "Transaction complete"
         );
+
+        bankingMetrics.incrementTransaction(TransactionType.TRANSFER);
 
 
         return transactionMapper.toTransferResponse(transaction);
