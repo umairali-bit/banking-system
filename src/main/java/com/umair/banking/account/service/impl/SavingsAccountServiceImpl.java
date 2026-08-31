@@ -3,6 +3,9 @@ package com.umair.banking.account.service.impl;
 import com.umair.banking.account.entity.SavingsAccount;
 import com.umair.banking.account.enums.AccountStatus;
 import com.umair.banking.account.enums.AccountType;
+import com.umair.banking.aop.annotation.Auditable;
+import com.umair.banking.audit.enums.AuditAction;
+import com.umair.banking.audit.service.AuditService;
 import com.umair.banking.customer.entity.Customer;
 import com.umair.banking.customer.repository.CustomerRepository;
 import com.umair.banking.exception.AccountNotFoundException;
@@ -10,6 +13,8 @@ import com.umair.banking.exception.CustomerNotFoundException;
 import com.umair.banking.account.repository.AccountRepository;
 import com.umair.banking.account.service.SavingsAccountService;
 import com.umair.banking.generator.AccountNumberGenerator;
+import com.umair.banking.notification.dto.EmailNotification;
+import com.umair.banking.notification.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -17,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import com.umair.banking.account.dto.request.CreateSavingsAccountRequest;
 import com.umair.banking.account.dto.response.SavingsAccountResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -30,12 +36,16 @@ public class SavingsAccountServiceImpl implements SavingsAccountService {
     private final AccountRepository accountRepository;
     private final AccountNumberGenerator accountNumberGenerator;
     private final CustomerRepository customerRepository;
+    private final EmailService emailService;
+    private final AuditService auditService;
 
     private static final BigDecimal DEFAULT_INTEREST_RATE = BigDecimal.valueOf(2.50);
+
 
     @PreAuthorize(
             "hasAnyRole('ADMIN','MANAGER','EMPLOYEE')"
     )
+    @Transactional
     @Override
     public SavingsAccountResponse createSavingsAccount(CreateSavingsAccountRequest request) {
 
@@ -57,6 +67,25 @@ public class SavingsAccountServiceImpl implements SavingsAccountService {
         customer.getAccounts().add(savingsAccount);
 
         SavingsAccount savedSavingsAccount = accountRepository.save(savingsAccount);
+
+        EmailNotification notification = new EmailNotification(
+                customer.getEmail(),
+                "Savings Account Created",
+                "Hello " + customer.getFirstName()
+                + ", \n\nYour savings account has been successfully created."
+                + "\n\nAccount Number: " + savedSavingsAccount.getAccountNumber()
+                + ",\nCurrency: " + savedSavingsAccount.getCurrency()
+                +"\nOpening balance: " + savingsAccount.getBalance()
+        );
+
+        emailService.sendEmail(notification);
+
+        auditService.log(
+                AuditAction.ACCOUNT_CREATED,
+                "ACCOUNT",
+                savedSavingsAccount.getId(),
+                "Savings account has been created"
+        );
 
         return toResponse(savedSavingsAccount);
 

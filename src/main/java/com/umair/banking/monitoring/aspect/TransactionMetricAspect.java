@@ -4,7 +4,6 @@ package com.umair.banking.monitoring.aspect;
 import com.umair.banking.monitoring.annotation.TrackTransactionMetric;
 import com.umair.banking.monitoring.metrics.BankingMetrics;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;

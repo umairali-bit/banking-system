@@ -8,12 +8,15 @@ import com.umair.banking.aop.annotation.LogExecutionTime;
 import com.umair.banking.audit.enums.AuditAction;
 import com.umair.banking.audit.service.AuditService;
 import com.umair.banking.currency.service.CurrencyConversionService;
+import com.umair.banking.customer.entity.Customer;
 import com.umair.banking.exception.AccountNotFoundException;
 import com.umair.banking.exception.InsufficientFundsExceptions;
 import com.umair.banking.exception.InvalidAccountStateException;
 import com.umair.banking.exception.TransactionNotFoundException;
 import com.umair.banking.monitoring.annotation.TrackTransactionMetric;
 import com.umair.banking.monitoring.metrics.BankingMetrics;
+import com.umair.banking.notification.dto.EmailNotification;
+import com.umair.banking.notification.service.EmailService;
 import com.umair.banking.transaction.dto.request.DepositRequest;
 import com.umair.banking.transaction.dto.request.TransferRequest;
 import com.umair.banking.transaction.dto.request.WithdrawRequest;
@@ -45,6 +48,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionMapper transactionMapper;
     private final AuditService auditService;
     private final BankingMetrics bankingMetrics;
+    private final EmailService emailService;
 
 
     private void validateAccountStatus(Account account) {
@@ -140,6 +144,26 @@ public class TransactionServiceImpl implements TransactionService {
 
         transaction = save(transaction);
 
+        Customer customer = account.getCustomer();
+
+        String accountNumber = account.getAccountNumber();
+
+        String maskedAccountNumber = "*****" + accountNumber.substring(accountNumber.length() - 4);
+
+        EmailNotification notification = new EmailNotification(
+                customer.getEmail(),
+                "Deposit Successful",
+                "Hello " + customer.getFirstName()
+                        + ",\n\nA deposit has been successfully made to your account."
+                        + "\n\nAccount Number: " + maskedAccountNumber
+                        + "\nAmount Deposited: " + depositRequest.amount() + " " + account.getCurrency()
+                        + "\nNew Balance: " + account.getBalance() + " " + account.getCurrency()
+                        + "\nTransaction Reference: " + transaction.getTransactionReference()
+        );
+
+        emailService.sendEmail(notification);
+
+
         auditService.log(
                 AuditAction.DEPOSIT,
                 "TRANSACTION",
@@ -192,16 +216,33 @@ public class TransactionServiceImpl implements TransactionService {
         );
         transaction = save(transaction);
 
+        Customer customer = account.getCustomer();
+
+        String accountNumber = account.getAccountNumber();
+
+        String maskedAccountNumber =
+                "*****" + accountNumber.substring(accountNumber.length() - 4);
+        EmailNotification notification = new EmailNotification(
+                customer.getEmail(),
+                "Withdrawal Successful",
+                "Hello " + customer.getFirstName()
+                        + ",\n\nA withdrawal has been successfully made from your account."
+                        + "\n\nAccount Number: " + maskedAccountNumber
+                        + "\nAmount Withdrawn: " + withdrawRequest.amount()
+                        + " " + account.getCurrency()
+                        + "\nRemaining Balance: " + account.getBalance()
+                        + " " + account.getCurrency()
+                        + "\nTransaction Reference: " + transaction.getTransactionReference()
+        );
+
+        emailService.sendEmail(notification);
+
         auditService.log(
                 AuditAction.WITHDRAW,
                 "TRANSACTION",
                 transaction.getId(),
                 "Withdraw complete"
         );
-
-        bankingMetrics.incrementTransaction(
-                TransactionType.WITHDRAW,
-                "SUCCESS");
 
         return transactionMapper.toWithdrawResponse(transaction);
     }
@@ -259,9 +300,60 @@ public class TransactionServiceImpl implements TransactionService {
                 "Transaction complete"
         );
 
-        bankingMetrics.incrementTransaction(
-                TransactionType.TRANSFER,
-                "SUCCESS");
+        // ========================
+        // SOURCE CUSTOMER EMAIL
+        // ========================
+
+        Customer sourceCustomer = sourceAccount.getCustomer();
+
+        String sourceAccountNumber = sourceAccount.getAccountNumber();
+
+        String maskedSourceAccountNumber =
+                "*****" + sourceAccountNumber.substring(sourceAccountNumber.length() - 4);
+
+        EmailNotification senderNotification = new EmailNotification(
+                sourceCustomer.getEmail(),
+                "Transfer Successful",
+                "Hello " + sourceCustomer.getFirstName()
+                        + ",\n\nYour transfer has been successfully completed."
+                        + "\n\nFrom Account: " + maskedSourceAccountNumber
+                        + "\nAmount Sent: " + transaction.getSourceAmount()
+                        + " " + transaction.getSourceCurrency()
+                        + "\nNew Balance: " + sourceAccount.getBalance()
+                        + " " + sourceAccount.getCurrency()
+                        + "\nTransaction Reference: " + transaction.getTransactionReference()
+        );
+
+        emailService.sendEmail(senderNotification);
+
+
+        // ========================
+        // DESTINATION CUSTOMER EMAIL
+        // ========================
+
+        Customer destinationCustomer = destinationAccount.getCustomer();
+
+        String destinationAccountNumber = destinationAccount.getAccountNumber();
+
+        String maskedDestinationAccountNumber =
+                "*****" + destinationAccountNumber.substring(
+                        destinationAccountNumber.length() - 4
+                );
+
+        EmailNotification receiverNotification = new EmailNotification(
+                destinationCustomer.getEmail(),
+                "Money Received",
+                "Hello " + destinationCustomer.getFirstName()
+                        + ",\n\nA transfer has been received in your account."
+                        + "\n\nAccount Number: " + maskedDestinationAccountNumber
+                        + "\nAmount Received: " + transaction.getDestinationAmount()
+                        + " " + transaction.getDestinationCurrency()
+                        + "\nNew Balance: " + destinationAccount.getBalance()
+                        + " " + destinationAccount.getCurrency()
+                        + "\nTransaction Reference: " + transaction.getTransactionReference()
+        );
+
+        emailService.sendEmail(receiverNotification);
 
 
         return transactionMapper.toTransferResponse(transaction);
