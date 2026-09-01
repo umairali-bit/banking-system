@@ -7,6 +7,8 @@ import com.umair.banking.security.dto.response.LoginResponse;
 import com.umair.banking.security.dto.response.LogoutResponse;
 import com.umair.banking.security.dto.response.RefreshTokenResponse;
 import com.umair.banking.security.dto.response.UserResponse;
+import com.umair.banking.security.passwordreset.dto.PasswordResetRequest;
+import com.umair.banking.security.passwordreset.service.PasswordResetService;
 import com.umair.banking.security.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
@@ -57,5 +60,13 @@ public class AuthController {
         return ResponseEntity.ok(logoutResponse);
 
 
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String>  forgotPassword(@Valid @RequestBody PasswordResetRequest passwordResetRequest) {
+
+        passwordResetService.forgotPassword(passwordResetRequest);
+
+        return ResponseEntity.ok("Password reset email has been sent");
     }
 }
