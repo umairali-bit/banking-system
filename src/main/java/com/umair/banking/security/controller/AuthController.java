@@ -8,6 +8,7 @@ import com.umair.banking.security.dto.response.LogoutResponse;
 import com.umair.banking.security.dto.response.RefreshTokenResponse;
 import com.umair.banking.security.dto.response.UserResponse;
 import com.umair.banking.security.passwordreset.dto.PasswordResetRequest;
+import com.umair.banking.security.passwordreset.dto.ResetPasswordRequest;
 import com.umair.banking.security.passwordreset.service.PasswordResetService;
 import com.umair.banking.security.service.AuthService;
 import jakarta.validation.Valid;
@@ -63,10 +64,18 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<String>  forgotPassword(@Valid @RequestBody PasswordResetRequest passwordResetRequest) {
+    public ResponseEntity<String>  forgotPassword(@Valid @RequestBody PasswordResetRequest request) {
 
-        passwordResetService.forgotPassword(passwordResetRequest);
+        passwordResetService.forgotPassword(request);
 
         return ResponseEntity.ok("Password reset email has been sent");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+
+        passwordResetService.resetPassword(request);
+
+        return ResponseEntity.ok("Password has been reset successfully");
     }
 }
