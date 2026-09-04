@@ -1,0 +1,44 @@
+services:
+
+  postgres:
+    image: postgres:18
+    container_name: banking-postgres
+
+    environment:
+      POSTGRES_DB: banking_db
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+  banking-app:
+    image: banking-system:latest
+    container_name: banking-app
+
+    environment:
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+
+      JWT_SECRET: ${JWT_SECRET}
+
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+
+      SPRING_PROFILES_ACTIVE: dev
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
