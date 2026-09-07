@@ -15,6 +15,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d banking_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   banking-app:
     image: banking-system:latest
     container_name: banking-app
@@ -38,7 +44,8 @@ services:
       - "8080:8080"
 
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:
