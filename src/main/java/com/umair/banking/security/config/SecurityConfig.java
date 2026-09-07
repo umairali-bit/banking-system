@@ -40,9 +40,14 @@ public class SecurityConfig {
                                         "/api/v1/auth/register",
                                         "/api/v1/auth/login",
                                         "/api/v1/auth/refresh",
-                                        "/actuator/prometheus",
                                         "/api/v1/auth/forgot-password",
-                                        "/api/v1/auth/reset-password"
+                                        "/api/v1/auth/reset-password",
+
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html",
+                                        "/v3/api-docs/**",
+
+                                        "/actuator/prometheus"
                                 ).permitAll()
                                 .anyRequest()
                                 .authenticated()
